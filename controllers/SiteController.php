@@ -9,6 +9,7 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
 use yii\mongodb\Query;
+use app\models\Status;
 
 class SiteController extends Controller
 {
@@ -50,8 +51,10 @@ class SiteController extends Controller
 
     public function actionMongo()
     {
-	$query = new Query();
-	echo json_encode($query->select([])->from('person')->all());
+        $m = new \MongoClient();
+        $collection = $m->selectCollection('local','person');
+        var_dump($collection->find());
+        //var_dump($status);
     }
 
     public function actionIndex()
