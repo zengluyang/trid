@@ -10,6 +10,8 @@ $config = [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'Vj-q6_19tFgv0W2woNApcYR_W0pbJS5t',
+            'enableCookieValidation' => false,
+            'enableCsrfValidation' => false,
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -39,7 +41,7 @@ $config = [
         ],
 	'mongodb' => [
 		'class' => '\yii\mongodb\Connection',
-		'dsn' => 'mongodb://localhost:27017/trid',
+		'dsn' => 'mongodb://localhost:27017/local',
 	],
 	//      'db' => require(__DIR__ . '/db.php'),
     ],
