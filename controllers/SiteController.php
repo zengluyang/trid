@@ -52,8 +52,8 @@ class SiteController extends Controller
     public function actionMongo()
     {
         $m = new \MongoClient();
-        $collection = $m->selectCollection('local','person');
-        var_dump($collection->find());
+        $collection = $m->selectCollection('local','user');
+        var_dump(iterator_to_array($collection->find()));
         //var_dump($status);
     }
 
