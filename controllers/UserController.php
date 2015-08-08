@@ -74,7 +74,7 @@ class UserController extends \yii\web\Controller
 
         $token = $this->generateToken($content["tel"]);
         $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
-        $newdata = ['$set'=>['token'=>$token]];
+        $newdata = ['$set'=>['token'=>$token,"verified"=>true]];
         $this->mongoCollection->update(["tel"=>$content["tel"]],$newdata,["upsert"=>true]);
         $rlt = [
             "type" => "sms_validation_result",
