@@ -50,7 +50,7 @@ class PictureController extends Controller{
 
         //连接数据库
         $m = new \MongoClient();
-        $this->mongoCollection = $m->selectCollection('test', 'picture');
+        $this->mongoCollection = $m->selectCollection('local', 'picture');
 
         if (!$this->saveTest($token, $randName, $words)) {
             return false;
