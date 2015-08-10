@@ -69,39 +69,13 @@ class PictureController extends \app\controllers\RestController {
             echo json_encode($rlt);
             return;
         }
+
         $token = $json_data['token'];
         $picture = $json_data['picture'];
         $type = $json_data['type'];
         $words = $json_data['words'];
-        if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $picture, $result)) {
-            $type = $result[2];
-            //检测文件类型
-            if (!in_array($type, $this->allowType)) {
-                $rlt = [
-                    "type" => "picture_upload_response",
-                    "success" => false,
-                    "error_no" => 3,
-                    "error_msg" => "upload type not allowed.",
-                ];
-                echo json_encode($rlt);
-                return;
-            } else {
-                //随机生成一个文件名
-                $randName = time() . rand(1000, 9999) . "." . $type;
-                //文件保存于 web/uploads 目录下
-                $new_file = "uploads/$randName";
-                if (!file_put_contents($new_file, base64_decode(str_replace($result[1], '', $picture)))) {                  
-                    $rlt = [
-                        "type" => "picture_upload_response",
-                        "success" => false,
-                        "error_no" => 4,
-                        "error_msg" => "file save failed.",
-                    ];
-                    echo json_encode($rlt);
-                    return;
-                }
-            };
-        } else {
+
+        if (!preg_match('/^(data:\s*image\/(\w+);base64,)/', $picture, $result)) {
             $rlt = [
                 "type" => "picture_upload_response",
                 "success" => false,
@@ -110,7 +84,37 @@ class PictureController extends \app\controllers\RestController {
             ];
             echo json_encode($rlt);
             return;
-        };
+
+        }
+
+        $type = $result[2];
+        //检测文件类型
+        if (!in_array($type, $this->allowType)) {
+            $rlt = [
+                "type" => "picture_upload_response",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "upload type not allowed.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        //随机生成一个文件名
+        $randName = time() . rand(1000, 9999) . "." . $type;
+        //文件保存于 web/uploads 目录下
+        $new_file = "uploads/$randName";
+
+        if (!file_put_contents($new_file, base64_decode(str_replace($result[1], '', $picture)))) {                  
+            $rlt = [
+                "type" => "picture_upload_response",
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "file save failed.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
 
         if (!$this->saveTest($token, $randName, $words)) {
             $rlt = [
@@ -122,6 +126,7 @@ class PictureController extends \app\controllers\RestController {
             echo json_encode($rlt);
             return ;
         }
+
         $rlt = [
             "type" => "picture_upload_response",
             "success" => true,
