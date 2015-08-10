@@ -17,7 +17,7 @@ use app\models\ContactForm;
 use yii\mongodb\Query;
 use app\models\Status;
 
-class PictureController extends Controller{
+class PictureController extends \app\controllers\RestController {
     private $mongoCollection = null;
     protected $allowType = array('jpg', 'jpeg', 'gif', 'png', 'bmp', 'tif');
 
@@ -77,7 +77,7 @@ class PictureController extends Controller{
         $type = $json_data['type'];
         //var_dump( $type);
         if ("picture_info_request" == $type) {
-            echo "hello";
+            //echo "hello";
             $query = new Query();
             $result = $query->select([])->from('picture')->all();
             return json_encode($result);

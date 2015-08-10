@@ -2,7 +2,7 @@
 
 namespace app\controllers;
 
-class UserController extends \yii\web\Controller
+class UserController extends \app\controllers\RestController
 {
     private $mongoCollection = null;
 
@@ -17,11 +17,6 @@ class UserController extends \yii\web\Controller
         return true;
     }
 
-    private function header() 
-    {
-        header("Content-Type:application/json;charset=UTF-8");
-    }
-
     public function actionIndex()
     {
         
@@ -29,7 +24,6 @@ class UserController extends \yii\web\Controller
 
     public function actionSmsValidationCode()
     {
-        $this->header();
         $input = file_get_contents("php://input");
         $content = json_decode($input,true);
         if(json_last_error()!=JSON_ERROR_NONE) {
@@ -93,7 +87,6 @@ class UserController extends \yii\web\Controller
 
     public function actionSmsValidationRequest()
     {
-        $this->header();
         $input = file_get_contents("php://input");
         $content = json_decode($input,true);
         if(json_last_error()!=JSON_ERROR_NONE) {
