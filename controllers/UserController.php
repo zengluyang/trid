@@ -87,7 +87,7 @@ class UserController extends \app\controllers\RestController
 
     public function actionSmsValidationRequest()
     {
-        $input = file_get_contents("php://input");
+            $input = file_get_contents("php://input");
         $content = json_decode($input,true);
         if(json_last_error()!=JSON_ERROR_NONE) {
             $rlt = [

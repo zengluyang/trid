@@ -21,6 +21,17 @@ class PictureController extends \app\controllers\RestController {
     private $mongoCollection = null;
     protected $allowType = array('jpg', 'jpeg', 'gif', 'png', 'bmp', 'tif');
 
+    public function beforeAction($action)
+    {
+        if (!parent::beforeAction($action)) {
+            return false;
+        }
+
+        $m = new \MongoClient();
+        $this->mongoCollection = $m->selectCollection('local','picture');       
+        return true;
+    }
+
     /*
      * 上传图片及文字信息
      * */
@@ -29,41 +40,97 @@ class PictureController extends \app\controllers\RestController {
         //获取接口输入信息
         $content = file_get_contents('php://input');
         $json_data = json_decode($content, true);
-        //var_dump( $json_data);
+
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => "picture_upload_response",
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        if(
+            !isset($json_data['type']) ||
+            $json_data['type']!="picture_upload_request" ||
+            !isset($json_data['picture']) ||
+            !isset($json_data['type']) ||
+            !isset($json_data['words'])
+        ) {
+
+            $rlt = [
+                "type" => "picture_upload_response",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
         $token = $json_data['token'];
-        //var_dump($token);
         $picture = $json_data['picture'];
         $type = $json_data['type'];
         $words = $json_data['words'];
-        var_dump($words);
-        if ("picture_upload_request" == $type) {
-            if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $picture, $result)) {
-                $type = $result[2];
-                //检测文件类型
-                if (!in_array($type, $this->allowType)) {
-                    return false;
-                } else {
-                    //随机生成一个文件名
-                    $randName = time() . rand(1000, 9999) . "." . $type;
-                    //文件保存于 web/uploads 目录下
-                    $new_file = "uploads/$randName";
-                    if (file_put_contents($new_file, base64_decode(str_replace($result[1], '', $picture)))) {
-                        echo '新文件保存成功：', $new_file;
-                    }
-                };
-            }
+        if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $picture, $result)) {
+            $type = $result[2];
+            //检测文件类型
+            if (!in_array($type, $this->allowType)) {
+                $rlt = [
+                    "type" => "picture_upload_response",
+                    "success" => false,
+                    "error_no" => 3,
+                    "error_msg" => "upload type not allowed.",
+                ];
+                echo json_encode($rlt);
+                return;
+            } else {
+                //随机生成一个文件名
+                $randName = time() . rand(1000, 9999) . "." . $type;
+                //文件保存于 web/uploads 目录下
+                $new_file = "uploads/$randName";
+                if (!file_put_contents($new_file, base64_decode(str_replace($result[1], '', $picture)))) {                  
+                    $rlt = [
+                        "type" => "picture_upload_response",
+                        "success" => false,
+                        "error_no" => 4,
+                        "error_msg" => "file save failed.",
+                    ];
+                    echo json_encode($rlt);
+                    return;
+                }
+            };
         } else {
-            return false;
+            $rlt = [
+                "type" => "picture_upload_response",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            echo json_encode($rlt);
+            return;
         };
 
-
-        //连接数据库
-        $m = new \MongoClient();
-        $this->mongoCollection = $m->selectCollection('local', 'picture');
-
         if (!$this->saveTest($token, $randName, $words)) {
-            return false;
+            $rlt = [
+                "type" => "picture_upload_response",
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "database error.",
+            ];
+            echo json_encode($rlt);
+            return ;
         }
+        $rlt = [
+            "type" => "picture_upload_response",
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => null,
+            "picture" => $randName,
+        ];
+        echo json_encode($rlt);
+        return ;
     }
 
     /*
@@ -72,14 +139,10 @@ class PictureController extends \app\controllers\RestController {
     public function actionSearch(){
         $content = file_get_contents('php://input');
         $json_data = json_decode($content, true);
-        //var_dump( $json_data);
         $token = $json_data['token'];
         $type = $json_data['type'];
-        //var_dump( $type);
         if ("picture_info_request" == $type) {
-            //echo "hello";
-            $query = new Query();
-            $result = $query->select([])->from('picture')->all();
+            $result = iterator_to_array($this->mongoCollection->find());
             return json_encode($result);
         }
     }
