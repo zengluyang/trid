@@ -261,14 +261,97 @@ class PictureController extends \app\controllers\RestController {
     }
 
     /*
+    * 点赞
+    * */
+    public function actionLike(){
+        $content = file_get_contents('php://input');
+        $json_data = json_decode($content, true);
+
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => "picture_search_response",
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        if(
+            !isset($json_data['type']) ||
+            $json_data['type']!="picture_like_request" ||
+            !isset($json_data['token']) ||
+            !isset($json_data['tel'])||
+            !isset($json_data['picture'])
+        ) {
+            $rlt = [
+                "type" => "picture_like_response",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+
+        $token = $json_data['token'];
+        $type = $json_data['type'];
+        $tel = $json_data['tel'];
+        $picture = $json_data['picture'];
+        $user = $this->userColleciton->findOne(['tel'=>$tel]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => "picture_like_response",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        if(!isset($user["token"])||$token!=$user["token"]) {
+            $rlt = [
+                "type" => "picture_like_response",
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+
+        $this->pictureCollection->update(
+            array("picture" => "$picture"),
+            array('$inc' => array("like" => 1)),
+            array("upsert" => true)
+        );
+        $picture = $this->pictureCollection->findOne(array("picture" => "$picture"));
+        $rlt = [
+            "type" => "picture_like_response",
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => null,
+            "picture" => $picture,
+        ];
+        echo json_encode($rlt);
+        return ;
+    }
+
+    /*
      * 数据库操作：插入数据
      * */
     private function saveTest($pictureName, $words,$user_id)
     {
         $time = time();
+        $like = 0;
         /*$newdata = array('$set' => array("token" => "$token","picture" => "$pictureName","word" => "$words"));
         $this->pictureCollection->update(["token"=>$token],$newdata,["upsert"=>true]);*/
-        $newdata = array("picture" => "$pictureName", "word" => "$words","createtime" => "$time","created_by"=>$user_id);
+        $newdata = array("picture" => "$pictureName", "word" => "$words","like" => "$like","createtime" => "$time","created_by"=>$user_id);
         $this->pictureCollection->insert($newdata);
         return true;
     }
