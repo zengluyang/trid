@@ -351,7 +351,7 @@ class PictureController extends \app\controllers\RestController {
         $like = 0;
         /*$newdata = array('$set' => array("token" => "$token","picture" => "$pictureName","word" => "$words"));
         $this->pictureCollection->update(["token"=>$token],$newdata,["upsert"=>true]);*/
-        $newdata = array("picture" => "$pictureName", "word" => "$words","like" => "$like","createtime" => "$time","created_by"=>$user_id);
+        $newdata = array("picture" => "$pictureName", "word" => "$words","like" => $like,"createtime" => "$time","created_by"=>$user_id);
         $this->pictureCollection->insert($newdata);
         return true;
     }
