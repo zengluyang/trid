@@ -18,7 +18,9 @@ use yii\mongodb\Query;
 use app\models\Status;
 
 class PictureController extends \app\controllers\RestController {
-    private $mongoCollection = null;
+    private $pictureCollection = null;
+    private $userColleciton = null;
+
     protected $allowType = array('jpg', 'jpeg', 'gif', 'png', 'bmp', 'tif');
 
     public function beforeAction($action)
@@ -28,7 +30,8 @@ class PictureController extends \app\controllers\RestController {
         }
 
         $m = new \MongoClient();
-        $this->mongoCollection = $m->selectCollection('local','picture');       
+        $this->pictureCollection = $m->selectCollection('local','picture');
+        $this->userColleciton = $m->selectCollection('local','user');       
         return true;
     }
 
@@ -55,11 +58,12 @@ class PictureController extends \app\controllers\RestController {
         if(
             !isset($json_data['type']) ||
             $json_data['type']!="picture_upload_request" ||
+            !isset($json_data['token']) ||
             !isset($json_data['picture']) ||
             !isset($json_data['type']) ||
+            !isset($json_data['tel']) ||
             !isset($json_data['words'])
         ) {
-
             $rlt = [
                 "type" => "picture_upload_response",
                 "success" => false,
@@ -70,17 +74,42 @@ class PictureController extends \app\controllers\RestController {
             return;
         }
 
-        $token = $json_data['token'];
         $picture = $json_data['picture'];
         $type = $json_data['type'];
         $words = $json_data['words'];
+        $tel = $json_data['tel'];
+        $token = $json_data['token'];
+
+        $user = $this->userColleciton->findOne(['tel'=>$tel]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => "picture_upload_response",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        if(!isset($user["token"])||$token!=$user["token"]) {
+            $rlt = [
+                "type" => "picture_upload_response",
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
 
         if (!preg_match('/^(data:\s*image\/(\w+);base64,)/', $picture, $result)) {
             $rlt = [
                 "type" => "picture_upload_response",
                 "success" => false,
-                "error_no" => 2,
-                "error_msg" => "input not valid.",
+                "error_no" => 5,
+                "error_msg" => "picture not valid.",
             ];
             echo json_encode($rlt);
             return;
@@ -101,9 +130,22 @@ class PictureController extends \app\controllers\RestController {
         }
 
         //随机生成一个文件名
-        $randName = time() . rand(1000, 9999) . "." . $type;
+        $randName = time() . $this->generateToken("",8) . "." . $type;
         //文件保存于 web/uploads 目录下
-        $new_file = "uploads/$randName";
+        $dirName = 'uploads/'.$tel;
+        if(!file_exists($dirName)) {
+            if(!mkdir($dirName,0744)) {
+                $rlt = [
+                    "type" => "picture_upload_response",
+                    "success" => false,
+                    "error_no" => 4,
+                    "error_msg" => "file save failed.",
+                ];
+                echo json_encode($rlt);
+                return;            
+            }
+        }
+        $new_file = "$dirName/$randName";
 
         if (!file_put_contents($new_file, base64_decode(str_replace($result[1], '', $picture)))) {                  
             $rlt = [
@@ -116,7 +158,7 @@ class PictureController extends \app\controllers\RestController {
             return;
         }
 
-        if (!$this->saveTest($token, $randName, $words)) {
+        if (!$this->saveTest($new_file, $words,$user["_id"])) {
             $rlt = [
                 "type" => "picture_upload_response",
                 "success" => false,
@@ -132,7 +174,7 @@ class PictureController extends \app\controllers\RestController {
             "success" => true,
             "error_no" => 0,
             "error_msg" => null,
-            "picture" => $randName,
+            "picture" => $new_file,
         ];
         echo json_encode($rlt);
         return ;
@@ -144,24 +186,90 @@ class PictureController extends \app\controllers\RestController {
     public function actionSearch(){
         $content = file_get_contents('php://input');
         $json_data = json_decode($content, true);
+
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => "picture_search_response",
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        if(
+            !isset($json_data['type']) ||
+            $json_data['type']!="picture_search_request" ||
+            !isset($json_data['token']) ||
+            !isset($json_data['tel'])
+        ) {
+            $rlt = [
+                "type" => "picture_search_response",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+
         $token = $json_data['token'];
         $type = $json_data['type'];
-        if ("picture_info_request" == $type) {
-            $result = iterator_to_array($this->mongoCollection->find());
-            return json_encode($result);
+        $tel = $json_data['tel'];
+        $user = $this->userColleciton->findOne(['tel'=>$tel]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => "picture_search_response",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            echo json_encode($rlt);
+            return;
         }
+
+        if(!isset($user["token"])||$token!=$user["token"]) {
+            $rlt = [
+                "type" => "picture_search_response",
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+        $cursor = $this->pictureCollection->find();
+        $count = $cursor->count();
+        $limit = $count;
+        $pics = iterator_to_array($cursor);
+        $rlt = [
+            "type" => "picture_search_response",
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => null,
+            "count" => $count,
+            "offset" => 0,
+            "limit" => $limit,
+            "pictures" => $pics,
+        ];
+        echo json_encode($rlt);
+        return ;
+
     }
 
     /*
      * 数据库操作：插入数据
      * */
-    private function saveTest($token, $pictureName, $words)
+    private function saveTest($pictureName, $words,$user_id)
     {
         $time = time();
         /*$newdata = array('$set' => array("token" => "$token","picture" => "$pictureName","word" => "$words"));
-        $this->mongoCollection->update(["token"=>$token],$newdata,["upsert"=>true]);*/
-        $newdata = array("token" => "$token", "picture" => "$pictureName", "word" => "$words","createtime" => "$time");
-        $this->mongoCollection->insert($newdata);
+        $this->pictureCollection->update(["token"=>$token],$newdata,["upsert"=>true]);*/
+        $newdata = array("picture" => "$pictureName", "word" => "$words","createtime" => "$time","created_by"=>$user_id);
+        $this->pictureCollection->insert($newdata);
         return true;
     }
 
