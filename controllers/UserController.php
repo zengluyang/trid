@@ -139,6 +139,21 @@ class UserController extends \app\controllers\RestController
             echo json_encode($rlt);
             return ;
         }
+
+        if(
+            !isset($user["verified"]) ||
+            !$user["verified"]
+        ) {
+            $rlt = [
+                "type" => "register",
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "tel not verified.",
+            ];
+            echo json_encode($rlt);
+            return ;
+        }
+
         $new_token = $this->generateToken($content['tel'].$content['username']);
         $newdata = [
             '$set'=>[
@@ -151,7 +166,7 @@ class UserController extends \app\controllers\RestController
             $rlt = [
                 "type" => "register",
                 "success" => false,
-                "error_no" => 5,
+                "error_no" => 6,
                 "error_msg" => "database error.",
             ];
             echo json_encode($rlt);
@@ -226,6 +241,21 @@ class UserController extends \app\controllers\RestController
             echo json_encode($rlt);
             return ;
         }
+
+        if(
+            !isset($user["verified"]) ||
+            !$user["verified"]
+        ) {
+            $rlt = [
+                "type" => "login",
+                "success" => false,
+                "error_no" => 6,
+                "error_msg" => "tel not verified.",
+            ];
+            echo json_encode($rlt);
+            return ;
+        }
+
         $new_token = $this->generateToken($content['tel'].$content['username']);
         $newdata = [
             '$set'=>[
@@ -236,7 +266,7 @@ class UserController extends \app\controllers\RestController
             $rlt = [
                 "type" => "login",
                 "success" => false,
-                "error_no" => 6,
+                "error_no" => 7,
                 "error_msg" => "database error.",
             ];
             echo json_encode($rlt);
