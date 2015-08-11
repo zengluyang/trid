@@ -238,6 +238,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 5,
                 "error_msg" => "password not valid.",
             ];
+            usleep(500000);
             echo json_encode($rlt);
             return ;
         }
