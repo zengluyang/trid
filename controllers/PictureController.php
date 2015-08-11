@@ -283,7 +283,7 @@ class PictureController extends \app\controllers\RestController {
             $json_data['type']!="picture_like_request" ||
             !isset($json_data['token']) ||
             !isset($json_data['tel'])||
-            !isset($json_data['picture'])
+            !isset($json_data['picture_id'])
         ) {
             $rlt = [
                 "type" => "picture_like_response",
@@ -299,7 +299,7 @@ class PictureController extends \app\controllers\RestController {
         $token = $json_data['token'];
         $type = $json_data['type'];
         $tel = $json_data['tel'];
-        $picture = $json_data['picture'];
+        $picture_id = $json_data['picture_id'];
         $user = $this->userColleciton->findOne(['tel'=>$tel]);
 
         if($user==null) {
@@ -326,17 +326,17 @@ class PictureController extends \app\controllers\RestController {
 
 
         $this->pictureCollection->update(
-            array("picture" => "$picture"),
+            array("_id" => new \MongoId($picture_id)),
             array('$inc' => array("like" => 1)),
             array("upsert" => true)
         );
-        $picture = $this->pictureCollection->findOne(array("picture" => "$picture"));
+
         $rlt = [
             "type" => "picture_like_response",
             "success" => true,
             "error_no" => 0,
             "error_msg" => null,
-            "picture" => $picture,
+            "picture_id" => $picture_id,
         ];
         echo json_encode($rlt);
         return ;
