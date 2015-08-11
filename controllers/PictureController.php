@@ -324,19 +324,20 @@ class PictureController extends \app\controllers\RestController {
             return;
         }
 
-
+        $mongoID = new \MongoID("$picture_id");
         $this->pictureCollection->update(
-            array("_id" => new \MongoId($picture_id)),
+            array("_id" => $mongoID),
             array('$inc' => array("like" => 1)),
             array("upsert" => true)
         );
+        $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
 
         $rlt = [
             "type" => "picture_like_response",
             "success" => true,
             "error_no" => 0,
             "error_msg" => null,
-            "picture_id" => $picture_id,
+            "picture_id" => $picture,
         ];
         echo json_encode($rlt);
         return ;
