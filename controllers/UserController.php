@@ -155,13 +155,20 @@ class UserController extends \app\controllers\RestController
         }
 
         $new_token = $this->generateToken($content['tel'].$content['username']);
+        $hashed_pwd = password_hash($content['password'], PASSWORD_DEFAULT);
+        //should use curl to register user in huanxin here
+        $huanxin_id = $content['tel'];
+        $huanxin_pwd = $hashed_pwd;
         $newdata = [
             '$set'=>[
                 'username'=>$content['username'],
-                'password'=>password_hash($content['password'], PASSWORD_DEFAULT),
+                'password'=>$hashed_pwd,
                 'token'=>$new_token,
+                'huanxin_id' => $huanxin_id,
+                'huanxin_password' => $huanxin_pwd,
             ]
         ];
+
         if(!$this->mongoCollection->update(["tel"=>$content["tel"]],$newdata)) {
             $rlt = [
                 "type" => "register",
@@ -176,6 +183,8 @@ class UserController extends \app\controllers\RestController
         $rlt = [
             "type" => "register",
             "token" => $new_token,
+            'huanxin_id' => $huanxin_id,
+            'huanxin_password' => $huanxin_pwd,
             "success" => true,
             "error_no" => 0,
             "error_msg" => null,
