@@ -19,7 +19,6 @@ class UserController extends \app\controllers\RestController
 
     public function actionIndex()
     {
-        
     }
 
     public function actionSmsValidationCode()
@@ -81,13 +80,183 @@ class UserController extends \app\controllers\RestController
         return ;
     }
 
-    private function generateToken($key) {
-        return md5($key);
-    } 
+
+    public function actionRegister() {
+        $input = file_get_contents("php://input");
+        $content = json_decode($input,true);
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => "register",
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        if(
+            !isset($content["type"]) ||
+            $content["type"]!="register" ||
+            !isset($content["username"]) ||
+            !isset($content["password"]) ||
+            !isset($content["token"]) ||
+            !isset($content["tel"])
+        ) {
+            $rlt = [
+                "type" => "register",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            echo json_encode($rlt);
+            return ;       
+        }
+
+        $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => "register",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            echo json_encode($rlt);
+            return ;
+        }
+
+        if(
+            !isset($user["token"]) ||
+            $user["token"]!=$content["token"]
+        ) {
+            $rlt = [
+                "type" => "register",
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            echo json_encode($rlt);
+            return ;
+        }
+        $new_token = $this->generateToken($content['tel'].$content['username']);
+        $newdata = [
+            '$set'=>[
+                'username'=>$content['username'],
+                'password'=>password_hash($content['password'], PASSWORD_DEFAULT),
+                'token'=>$new_token,
+            ]
+        ];
+        if(!$this->mongoCollection->update(["tel"=>$content["tel"]],$newdata)) {
+            $rlt = [
+                "type" => "register",
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "database error.",
+            ];
+            echo json_encode($rlt);
+            return ;
+        }
+
+        $rlt = [
+            "type" => "register",
+            "token" => $new_token,
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => null,
+        ];
+        echo json_encode($rlt);
+        return ;
+
+    }
+
+    public function actionLogin() {
+        $input = file_get_contents("php://input");
+        $content = json_decode($input,true);
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => "login",
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        if(
+            !isset($content["type"]) ||
+            $content["type"]!="login" ||
+            !isset($content["password"]) ||
+            !isset($content["tel"])
+        ) {
+            $rlt = [
+                "type" => "login",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            echo json_encode($rlt);
+            return ;       
+        }
+
+        $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => "login",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            echo json_encode($rlt);
+            return ;
+        }
+
+        if(
+            !isset($user["password"]) ||
+            !password_verify($content["password"],$user["password"])
+        ) {
+            $rlt = [
+                "type" => "login",
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "password not valid.",
+            ];
+            echo json_encode($rlt);
+            return ;
+        }
+        $new_token = $this->generateToken($content['tel'].$content['username']);
+        $newdata = [
+            '$set'=>[
+                'token' => $new_token,
+            ]
+        ];
+        if(!$this->mongoCollection->update(["tel"=>$content["tel"]],$newdata)) {
+            $rlt = [
+                "type" => "login",
+                "success" => false,
+                "error_no" => 6,
+                "error_msg" => "database error.",
+            ];
+            echo json_encode($rlt);
+            return ;
+        }
+
+        $rlt = [
+            "type" => "login",
+            "token" => $this->generateToken($content['tel'].$content['username']),
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => null,
+        ];
+        echo json_encode($rlt);
+        return ;
+    }
 
     public function actionSmsValidationRequest()
     {
-            $input = file_get_contents("php://input");
+        $input = file_get_contents("php://input");
         $content = json_decode($input,true);
         if(json_last_error()!=JSON_ERROR_NONE) {
             $rlt = [
