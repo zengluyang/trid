@@ -181,6 +181,120 @@ class PictureController extends \app\controllers\RestController {
     }
 
     /*
+     * 删除图片及文字信息
+     * */
+    public function actionDelete()
+    {
+        //获取接口输入信息
+        $content = file_get_contents('php://input');
+        $json_data = json_decode($content, true);
+
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => "picture_delete_response",
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        if(
+            !isset($json_data['type']) ||
+            $json_data['type']!="picture_delete_request" ||
+            !isset($json_data['token']) ||
+            !isset($json_data['tel'])||
+            !isset($json_data['picture_id'])
+        ) {
+            $rlt = [
+                "type" => "picture_delete_response",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+
+        $token = $json_data['token'];
+        $type = $json_data['type'];
+        $tel = $json_data['tel'];
+        $picture_id = $json_data['picture_id'];
+        $user = $this->userColleciton->findOne(['tel'=>$tel]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => "picture_delete_response",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        if(!isset($user["token"])||$token!=$user["token"]) {
+            $rlt = [
+                "type" => "picture_delete_response",
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+
+        $mongoID = new \MongoID("$picture_id");
+        $picture = $this->pictureCollection->findOne(array("_id" => $mongoID),array('created_by'));
+        if($picture == null) {
+            $rlt = [
+                "type" => "picture_delete_response",
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "query result is null.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+        if($user["_id"] == $picture["created_by"]){
+            //删除指定信息
+            if(!$this->deleteData( $mongoID)){
+                $rlt = [
+                    "type" => "picture_delete_response",
+                    "success" => false,
+                    "error_no" => 6,
+                    "error_msg" => "database error.",
+                ];
+                echo json_encode($rlt);
+                return ;
+            }
+        }else{
+            $rlt = [
+                "type" => "picture_delete_response",
+                "success" => false,
+                "error_no" => 7,
+                "error_msg" => "permission denied.",
+            ];
+            echo json_encode($rlt);
+            return;
+        }
+
+
+        $rlt = [
+            "type" => "picture_delete_response",
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => null,
+        ];
+        echo json_encode($rlt);
+        return ;
+    }
+
+    /*
      * 查询朋友圈信息
      * */
     public function actionSearch(){
@@ -363,5 +477,11 @@ class PictureController extends \app\controllers\RestController {
         return true;
     }
 
-
+    /*
+     * 数据库操作：删除数据
+     * */
+    private function deleteData( $mongoID){
+        $this->pictureCollection->remove(array('_id' =>  $mongoID));
+        return true;
+    }
 } 
