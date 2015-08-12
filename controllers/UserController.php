@@ -266,7 +266,7 @@ class UserController extends \app\controllers\RestController
             return ;
         }
 
-        $new_token = $this->generateToken($content['tel'].$content['username']);
+        $new_token = $this->generateToken($content['tel']);
         $newdata = [
             '$set'=>[
                 'token' => $new_token,
@@ -285,7 +285,7 @@ class UserController extends \app\controllers\RestController
 
         $rlt = [
             "type" => "login",
-            "token" => $this->generateToken($content['tel'].$content['username']),
+            "token" => $new_token,
             "success" => true,
             "error_no" => 0,
             "error_msg" => null,
