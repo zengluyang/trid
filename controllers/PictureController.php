@@ -337,7 +337,7 @@ class PictureController extends \app\controllers\RestController {
             "success" => true,
             "error_no" => 0,
             "error_msg" => null,
-            "picture_id" => $picture,
+            "picture" => $picture,
         ];
         echo json_encode($rlt);
         return ;
