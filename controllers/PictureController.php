@@ -325,11 +325,18 @@ class PictureController extends \app\controllers\RestController {
         }
 
         $mongoID = new \MongoID("$picture_id");
-        $this->pictureCollection->update(
-            array("_id" => $mongoID),
-            array('$inc' => array("like" => 1)),
-            array("upsert" => true)
-        );
+        $picture = $this->pictureCollection->findOne(array("_id" => $mongoID),array('like_by'));
+        //判断是否已赞
+        if(!in_array($tel, $picture['like_by'])){
+            $this->pictureCollection->update(
+                array("_id" => $mongoID),
+                array('$inc' => array("like" => 1)),
+                array("upsert" => true)
+            );
+
+            $newdata = array( '$push' => array('like_by' => "$tel"));
+            $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
+        }
         $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
 
         $rlt = [
@@ -350,9 +357,8 @@ class PictureController extends \app\controllers\RestController {
     {
         $time = time();
         $like = 0;
-        /*$newdata = array('$set' => array("token" => "$token","picture" => "$pictureName","word" => "$words"));
-        $this->pictureCollection->update(["token"=>$token],$newdata,["upsert"=>true]);*/
-        $newdata = array("picture" => "$pictureName", "word" => "$words","like" => $like,"createtime" => "$time","created_by"=>$user_id);
+        $like_by = array();
+        $newdata = array("picture" => "$pictureName", "word" => $words,"like" => $like,"like_by" => $like_by,"createtime" => $time,"created_by"=>$user_id);
         $this->pictureCollection->insert($newdata);
         return true;
     }
