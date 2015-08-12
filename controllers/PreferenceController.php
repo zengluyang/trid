@@ -158,7 +158,7 @@ class PreferenceController extends RestController
             "error_no" => 0,
             "error_msg" => "",
             "question" => [
-                "id" => $pf_id,
+                "pf_id" => $pf_id,
                 "pic0_enc" => $pic0_enc,
                 "pic1_enc" => $pic1_enc,
                 "description" => $pf["description"] 
