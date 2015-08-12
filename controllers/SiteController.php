@@ -39,14 +39,23 @@ class SiteController extends Controller
     public function actions()
     {
         return [
-            'error' => [
-                'class' => 'yii\web\ErrorAction',
-            ],
             'captcha' => [
                 'class' => 'yii\captcha\CaptchaAction',
                 'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
             ],
         ];
+    }
+
+    public function actionError() {
+        $exception = Yii::$app->errorHandler->exception;
+        if ($exception !== null) {
+            $rlt = [
+                "success" => false,
+                "errro_no" => -1,
+                "error_msg" => $exception,
+            ];
+            echo json_encode($rlt);
+        }
     }
 
     public function actionMongo()

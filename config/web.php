@@ -39,6 +39,22 @@ $config = [
                 ],
             ],
         ],
+        'response' => [
+            'format' => yii\web\Response::FORMAT_JSON,
+            'charset' => 'UTF-8',
+            'class' => 'yii\web\Response',
+            'on beforeSend' => function ($event) {
+                $response = $event->sender;
+                if ($response->isSuccessful != true) {
+                    $response->data = [
+                        'success' => $response->isSuccessful,
+                        'error_no' => -1,
+                        'error_msg' => 'fatal error.',
+                        'data' => $response->data,
+                    ];
+                }
+            },
+        ],
 	'mongodb' => [
 		'class' => '\yii\mongodb\Connection',
 		'dsn' => 'mongodb://localhost:27017/local',
