@@ -97,7 +97,7 @@ class PreferenceController extends RestController
             $collected[] = $answer["id"];
         }
 
-        $pf_id = $this->get_next_pf_ID($collected);
+        $pf_id = $this->get_next_pf_id($collected);
         if($pf_id == -1) {
             $rlt = [
                 "type" => "pf_question_response",
@@ -133,7 +133,7 @@ class PreferenceController extends RestController
                 "type" => "pf_question_response",
                 "success" => false,
                 "error_no" => 7,
-                "error_msg" => "can not read the pictures.",
+                "error_msg" => "error in reading pictures.",
                 "question" => NULL
             ];
             echo json_encode($rlt);
@@ -146,7 +146,7 @@ class PreferenceController extends RestController
                 "type" => "pf_question_response",
                 "success" => false,
                 "error_no" => 8,
-                "error_msg" => "base64 encode error",
+                "error_msg" => "base64 encryption error",
                 "question" => NULL
             ];
             echo json_encode($rlt);
@@ -169,15 +169,15 @@ class PreferenceController extends RestController
         return;
     }
 
-    private function get_max_pf_ID()
+    private function get_max_pf_id()
     {
         //TODO: add more resonable logic.
         return 100;
     }
     //return a random pf_id.
-    private function get_next_pf_ID($collected = [])
+    private function get_next_pf_id($collected = [])
     {
-        $max_pf_ID = $this->get_max_pf_ID();
+        $max_pf_ID = $this->get_max_pf_id();
         $IDs = [];
         for($i = 0; $i < $max_pf_ID; $i++) {
             $IDs[] = $i;
@@ -255,7 +255,7 @@ class PreferenceController extends RestController
 
         $answer = $content["answer"];
         //check the validation of the answer.
-        if(($answer["pf_id"] < 0 || $answer["pf_id"] >= $this->get_max_pf_ID())
+        if(($answer["pf_id"] < 0 || $answer["pf_id"] >= $this->get_max_pf_id())
                     || !($answer["choice"] == 0 || $answer["choice"] == 1)) {
 
             $rlt = [
