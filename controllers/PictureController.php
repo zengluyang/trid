@@ -157,7 +157,7 @@ class PictureController extends \app\controllers\RestController {
             echo json_encode($rlt);
             return;
         }
-        $fileUrl = Yii::$app->request->hostInfo.'/'.Yii::$app->request->baseUrl.'/'.$new_file;
+        $fileUrl = '/'.$new_file;
         if (!$this->saveTest($fileUrl, $words,$user["_id"])) {
             $rlt = [
                 "type" => "picture_upload_response",
