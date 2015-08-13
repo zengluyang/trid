@@ -22,9 +22,9 @@ class RestController extends \yii\web\Controller
 
     protected function generateToken($key,$length=64) {
         if(function_exists('openssl_random_pseudo_bytes')) {
-            $token = base64_encode(openssl_random_pseudo_bytes($length/4,$strong));
+            $bytes = base64_encode(openssl_random_pseudo_bytes($length,$strong));
             if($strong == TRUE)
-                return bin2hex($token);
+                return strtr(substr(base64_encode($bytes), 0, $length), '+/', '_-');
         }
 
         //fallback to mt_rand if php < 5.3 or no openssl available
