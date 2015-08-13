@@ -358,7 +358,7 @@ class PictureController extends \app\controllers\RestController {
         $cursor = $this->pictureCollection->find();
         $count = $cursor->count();
         $limit = $count;
-        $pics = iterator_to_array($cursor);
+        $pics = iterator_to_array($cursor,false);
         $rlt = [
             "type" => "picture_search_response",
             "success" => true,

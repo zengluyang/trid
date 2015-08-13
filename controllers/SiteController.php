@@ -62,7 +62,7 @@ class SiteController extends Controller
     {
         $m = new \MongoClient();
         $collection = $m->selectCollection('local','user');
-        var_dump(iterator_to_array($collection->find()));
+        echo json_encode((iterator_to_array($collection->find(),false)));
         //var_dump($status);
     }
 
