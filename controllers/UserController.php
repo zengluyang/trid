@@ -73,7 +73,7 @@ class UserController extends \app\controllers\RestController
             "error_no" => 0,
             "error_msg" => null,   
         ];
-        return json_encode($rlt)
+        return json_encode($rlt);
     }
 
 
