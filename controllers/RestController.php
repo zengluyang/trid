@@ -5,14 +5,35 @@ namespace app\controllers;
 class RestController extends \yii\web\Controller
 {
 	private $mongoCollection = null;
-
+	private $logCollection = null;
     public function beforeAction($action)
     {
         if (!parent::beforeAction($action)) {
             return false;
         }
+
+        $m = new \MongoClient();
+        $this->logCollection = $m->selectCollection('local','log');
         $this->header();
         return true;
+    }
+
+    public function afterAction($action,$result) {
+
+        $result = parent::afterAction($action,$result);
+
+        $new_data = [
+        	"request"=>[
+        		"body"=>\Yii::$app->request->rawBody,
+        	],
+        	"response" => [
+        		"body"=>$result,
+        	],
+        	"time"=>new \MongoDate(),
+        ];
+        var_dump($new_data);
+        $this->logCollection->insert($new_data);
+        return $result;
     }
 
     private function header() 
