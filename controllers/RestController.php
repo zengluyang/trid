@@ -31,7 +31,7 @@ class RestController extends \yii\web\Controller
         	],
         	"time"=>new \MongoDate(),
         ];
-        var_dump($new_data);
+        //var_dump($new_data);
         $this->logCollection->insert($new_data);
         return $result;
     }
