@@ -51,8 +51,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(
@@ -70,8 +69,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         $picture = $json_data['picture'];
@@ -89,8 +87,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(!isset($user["token"])||$token!=$user["token"]) {
@@ -100,8 +97,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 4,
                 "error_msg" => "token not valid.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if (!preg_match('/^(data:\s*image\/(\w+);base64,)/', $picture, $result)) {
@@ -111,8 +107,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 5,
                 "error_msg" => "picture not valid.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
 
         }
 
@@ -125,8 +120,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 3,
                 "error_msg" => "upload type not allowed.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         //随机生成一个文件名
@@ -141,8 +135,7 @@ class PictureController extends \app\controllers\RestController {
                     "error_no" => 4,
                     "error_msg" => "file save failed.",
                 ];
-                echo json_encode($rlt);
-                return;            
+                return json_encode($rlt);
             }
         }
         $new_file = "$dirName/$randName";
@@ -154,8 +147,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 4,
                 "error_msg" => "file save failed.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
         $fileUrl = '/'.$new_file;
         if (!$this->saveTest($fileUrl, $words,$user["_id"])) {
@@ -165,8 +157,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 5,
                 "error_msg" => "database error.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         $rlt = [
@@ -176,8 +167,7 @@ class PictureController extends \app\controllers\RestController {
             "error_msg" => null,
             "picture" => $fileUrl,
         ];
-        echo json_encode($rlt);
-        return ;
+        return json_encode($rlt);
     }
 
     /*
@@ -196,8 +186,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(
@@ -213,8 +202,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
 
@@ -231,8 +219,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(!isset($user["token"])||$token!=$user["token"]) {
@@ -242,8 +229,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 4,
                 "error_msg" => "token not valid.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
 
@@ -256,8 +242,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 5,
                 "error_msg" => "query result is null.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if($user["_id"] == $picture["created_by"]){
@@ -269,8 +254,7 @@ class PictureController extends \app\controllers\RestController {
                     "error_no" => 6,
                     "error_msg" => "database error.",
                 ];
-                echo json_encode($rlt);
-                return ;
+                return json_encode($rlt);
             }
         }else{
             $rlt = [
@@ -279,8 +263,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 7,
                 "error_msg" => "permission denied.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
 
@@ -290,8 +273,7 @@ class PictureController extends \app\controllers\RestController {
             "error_no" => 0,
             "error_msg" => null,
         ];
-        echo json_encode($rlt);
-        return ;
+        return json_encode($rlt);
     }
 
     /*
@@ -308,8 +290,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(
@@ -324,8 +305,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
 
@@ -341,8 +321,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(!isset($user["token"])||$token!=$user["token"]) {
@@ -352,8 +331,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 4,
                 "error_msg" => "token not valid.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
         $cursor = $this->pictureCollection->find();
         $count = $cursor->count();
@@ -369,8 +347,7 @@ class PictureController extends \app\controllers\RestController {
             "limit" => $limit,
             "pictures" => $pics,
         ];
-        echo json_encode($rlt);
-        return ;
+        return json_encode($rlt);
 
     }
 
@@ -388,8 +365,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(
@@ -405,8 +381,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
 
@@ -423,8 +398,7 @@ class PictureController extends \app\controllers\RestController {
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(!isset($user["token"])||$token!=$user["token"]) {
@@ -460,8 +434,7 @@ class PictureController extends \app\controllers\RestController {
             "error_msg" => null,
             "picture" => $picture,
         ];
-        echo json_encode($rlt);
-        return ;
+        return json_encode($rlt);
     }
 
     /*
