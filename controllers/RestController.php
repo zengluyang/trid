@@ -2,6 +2,8 @@
 
 namespace app\controllers;
 
+use Yii;
+
 class RestController extends \yii\web\Controller
 {
 	private $mongoCollection = null;
@@ -11,6 +13,8 @@ class RestController extends \yii\web\Controller
         if (!parent::beforeAction($action)) {
             return false;
         }
+
+        \Yii::$app->response->format = yii\web\Response::FORMAT_RAW;
 
         $m = new \MongoClient();
         $this->logCollection = $m->selectCollection('local','log');
@@ -25,9 +29,11 @@ class RestController extends \yii\web\Controller
         $new_data = [
         	"request"=>[
         		"body"=>\Yii::$app->request->rawBody,
+                "Content-Type"=>\Yii::$app->request->headers->get('Content-Type'),
         	],
         	"response" => [
-        		"body"=>$result,
+        		"body"=>json_decode($result),
+                "header"=>\Yii::$app->response->headers->toArray(),
         	],
         	"time"=>new \MongoDate(),
         ];
@@ -36,9 +42,9 @@ class RestController extends \yii\web\Controller
         return $result;
     }
 
-    private function header() 
+    private function header()
     {
-        header("Content-Type:application/json;charset=UTF-8");
+        \Yii::$app->response->headers->set("Content-Type","application/json;charset=UTF-8");
     }
 
     protected function generateToken($key,$length=64) {
