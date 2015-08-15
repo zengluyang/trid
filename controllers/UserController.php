@@ -32,8 +32,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
 
@@ -49,8 +48,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         if(!$this->validateValidationCode($content["tel"],$content["code"])){
@@ -61,8 +59,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 3,
                 "error_msg" => "validation code invalid.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         $token = $this->generateToken($content["tel"]);
@@ -76,8 +73,7 @@ class UserController extends \app\controllers\RestController
             "error_no" => 0,
             "error_msg" => null,   
         ];
-        echo json_encode($rlt);
-        return ;
+        return json_encode($rlt)
     }
 
 
@@ -91,7 +87,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
             ];
-            echo json_encode($rlt);
+            return json_encode($rlt);
             return;
         }
 
@@ -109,8 +105,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
             ];
-            echo json_encode($rlt);
-            return ;       
+            return json_encode($rlt);       
         }
 
         $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
@@ -122,8 +117,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         if(
@@ -136,8 +130,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 4,
                 "error_msg" => "token not valid.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         if(
@@ -150,8 +143,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 5,
                 "error_msg" => "tel not verified.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         $new_token = $this->generateToken($content['tel'].$content['username']);
@@ -176,8 +168,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 6,
                 "error_msg" => "database error.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         $rlt = [
@@ -189,8 +180,7 @@ class UserController extends \app\controllers\RestController
             "error_no" => 0,
             "error_msg" => null,
         ];
-        echo json_encode($rlt);
-        return ;
+        return json_encode($rlt)
 
     }
 
@@ -204,7 +194,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
             ];
-            echo json_encode($rlt);
+            return json_encode($rlt);
             return;
         }
 
@@ -220,8 +210,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
             ];
-            echo json_encode($rlt);
-            return ;       
+            return json_encode($rlt);       
         }
 
         $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
@@ -233,8 +222,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         if(
@@ -248,8 +236,7 @@ class UserController extends \app\controllers\RestController
                 "error_msg" => "password not valid.",
             ];
             usleep(500000);
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         if(
@@ -262,8 +249,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 6,
                 "error_msg" => "tel not verified.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         $new_token = $this->generateToken($content['tel']);
@@ -279,8 +265,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 7,
                 "error_msg" => "database error.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         $rlt = [
@@ -290,8 +275,7 @@ class UserController extends \app\controllers\RestController
             "error_no" => 0,
             "error_msg" => null,
         ];
-        echo json_encode($rlt);
-        return ;
+        return json_encode($rlt)
     }
 
     public function actionSmsValidationRequest()
@@ -305,7 +289,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
             ];
-            echo json_encode($rlt);
+            return json_encode($rlt);
             return;
         }
 
@@ -321,8 +305,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
         if(!$this->saveSmsNotValidateUser($content["tel"])) {
 
@@ -332,8 +315,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 3,
                 "error_msg" => "database error.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
         if(!$this->sendSmsToTel($content['tel'])) {
 
@@ -343,8 +325,7 @@ class UserController extends \app\controllers\RestController
                 "error_no" => 4,
                 "error_msg" => "3rd party sms send failed.",
             ];
-            echo json_encode($rlt);
-            return ;
+            return json_encode($rlt);
         }
 
         $rlt = [
@@ -355,7 +336,7 @@ class UserController extends \app\controllers\RestController
         ];
 
         
-        echo json_encode($rlt);
+        return json_encode($rlt);
 
     }
 
