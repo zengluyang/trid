@@ -24,9 +24,6 @@ class PreferenceController extends RestController
         return true;
     }
 
-    public function actionIndex()
-    {
-    }
 
     public function actionRequest()
     {
@@ -40,8 +37,7 @@ class PreferenceController extends RestController
                 "error_msg" => "json decode failed.",
                 "question" => NULL
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(!isset($content['type']) ||
@@ -56,8 +52,7 @@ class PreferenceController extends RestController
         		"question" => NULL
         	];
 
-        	echo json_encode($rlt);
-        	return;
+        	return json_encode($rlt);
         }
 
         $user = $this->mongoCollection->findOne(['tel' => $content["tel"]]);
@@ -69,8 +64,7 @@ class PreferenceController extends RestController
         		"error_msg" => "tel not found.",
         		"question" => NULL
         	];
-        	echo json_encode($rlt);
-        	return;
+        	return json_encode($rlt);
         }
 
         if(!isset($user["token"]) ||
@@ -83,21 +77,21 @@ class PreferenceController extends RestController
           		"error_msg" => "token not valid.",
           		"question" => NULL
          	];
-         	echo json_encode($rlt);
-         	return;
+         	return json_encode($rlt);
         }
 
+        //
         $answers = [];
-        if(isset($user["pf_collected"])) {
-            $answers = $user["pf_collected"];
+        if(isset($user["pf_answers"])) {
+            $answers = $user["pf_answers"];
         }
 
-        $collected = [];
+        $uploaded_pf_ids = [];
         foreach($answers as $answer) {
-            $collected[] = $answer["id"];
+            $uploaded_pf_ids[] = $answer["pf_id"];
         }
 
-        $pf_id = $this->get_next_pf_id($collected);
+        $pf_id = $this->get_next_pf_id($uploaded_pf_ids);
         if($pf_id == -1) {
             $rlt = [
                 "type" => "pf_question_response",
@@ -106,8 +100,7 @@ class PreferenceController extends RestController
                 "error_msg" => "no available pf questions.",
                 "question" => NULL
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         $pf = $this->pfCollection->findOne(["pf_id" => $pf_id]);
@@ -122,25 +115,25 @@ class PreferenceController extends RestController
                 "error_msg" => "database error.",
                 "question" => NULL
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
-
+		
+		$description = file_get_contents('../preferences/' . $pf["description"]);
         $pic0 = file_get_contents('../preferences/' . $pf["pic0"]);
         $pic1 = file_get_contents('../preferences/' . $pf["pic1"]);
-        if($pic0 == false || $pic1 == false) {
+        if($pic0 == false || $pic1 == false || $description == false) {
             $rlt = [
                 "type" => "pf_question_response",
                 "success" => false,
                 "error_no" => 7,
-                "error_msg" => "error in reading pictures.",
+                "error_msg" => "error in reading files",
                 "question" => NULL
             ];
-            echo json_encode($rlt);
+            return json_encode($rlt);
         }
 
         $pic0_enc = base64_encode($pic0);
-        $pic1_enc = base64_encode($pic1);
+		$pic1_enc = base64_encode($pic1);
         if($pic0_enc == false || $pic1_enc == false) {
             $rlt = [
                 "type" => "pf_question_response",
@@ -149,9 +142,10 @@ class PreferenceController extends RestController
                 "error_msg" => "base64 encryption error",
                 "question" => NULL
             ];
-            echo json_encode($rlt);
-        }
+            return json_encode($rlt);
+		}
 
+		$description = trim($description);
         $rlt = [
             "type" => "pf_question_response",
             "success" => true,
@@ -161,41 +155,40 @@ class PreferenceController extends RestController
                 "pf_id" => $pf_id,
                 "pic0_enc" => $pic0_enc,
                 "pic1_enc" => $pic1_enc,
-                "description" => $pf["description"] 
+                "description" => $description
             ]
         ];
 
-        echo json_encode($rlt);
-        return;
+        return json_encode($rlt);
     }
 
     private function get_max_pf_id()
     {
         //TODO: add more resonable logic.
-        return 100;
+        return 3;
     }
     //return a random pf_id.
-    private function get_next_pf_id($collected = [])
+    private function get_next_pf_id($uploaded_pf_ids = [])
     {
-        $max_pf_ID = $this->get_max_pf_id();
-        $IDs = [];
-        for($i = 0; $i < $max_pf_ID; $i++) {
-            $IDs[] = $i;
+        $max_pf_id = $this->get_max_pf_id();
+        $pf_ids = [];
+        for($i = 0; $i < $max_pf_id; $i++) {
+            $pf_ids[] = $i;
         }
-        foreach($collected as $item) {
-            unset($IDs[$item]);
+        foreach($uploaded_pf_ids as $item) {
+            unset($pf_ids[$item]);
         }
-        $available_IDs = array_values($IDs);
-        $length = count($available_IDs);
+        $available_pf_ids = array_values($pf_ids);
+        $length = count($available_pf_ids);
         if($length == 0) {
             return -1; //no pf id available.
         } else {
             $index = rand(0, $length - 1);
-            return $available_IDs[$index];
+            return $available_pf_ids[$index];
         }
     }
 
-    public function actionCollect()
+    public function actionUpload()
     {
         $input = file_get_contents("php://input");
         $content = json_decode($input,true);
@@ -206,12 +199,11 @@ class PreferenceController extends RestController
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(!isset($content["type"]) ||
-            $content["type"] != "pf_answer_send" ||
+            $content["type"] != "pf_answer_upload" ||
             !isset($content["tel"]) ||
             !isset($content["token"]) ||
             !isset($content["answer"]) ||
@@ -224,8 +216,7 @@ class PreferenceController extends RestController
                 "error_msg" => "input not valid.",
             ];
 
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         $user = $this->mongoCollection->findOne(["tel" => $content["tel"]]);
@@ -236,39 +227,34 @@ class PreferenceController extends RestController
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         if(!isset($user["token"]) ||
             $user["token"] != $content["token"]) {
-
             $rlt = [
                 "type" => "pf_answer_confirm",
                 "success" => false,
                 "error_no" => 4,
                 "error_msg" => "token not valid.",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         $answer = $content["answer"];
         //check the validation of the answer.
-        if(($answer["pf_id"] < 0 || $answer["pf_id"] >= $this->get_max_pf_id())
-                    || !($answer["choice"] == 0 || $answer["choice"] == 1)) {
-
+        if( ( $answer["pf_id"] < 0 || $answer["pf_id"] >= $this->get_max_pf_id() ) 
+        	|| !($answer["choice"] == 0 || $answer["choice"] == 1)) {
             $rlt = [
                 "type" => "pf_answer_confirm",
                 "success" => false,
                 "error_no" => 5,
                 "error_msg" => "answer not valid",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
-        $newdata = ['$push' => ["pf_collected" => $answer]];
+        $newdata = ['$push' => ["pf_answers" => $answer]];
         if(!$this->mongoCollection->update([ "tel" => $content["tel"]], $newdata)) {
             $rlt = [
                 "type" => "pf_answer_confirm",
@@ -276,8 +262,7 @@ class PreferenceController extends RestController
                 "error_no" => 6,
                 "error_msg" => "database error",
             ];
-            echo json_encode($rlt);
-            return;
+            return json_encode($rlt);
         }
 
         $rlt = [
@@ -286,7 +271,6 @@ class PreferenceController extends RestController
             "error_no" => 0,
             "error_msg" => "",
             ];
-        echo json_encode($rlt);
-        return;
+        return json_encode($rlt);
     }
 }
