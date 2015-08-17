@@ -7,7 +7,10 @@ use Yii;
 class RestController extends \yii\web\Controller
 {
 	private $mongoCollection = null;
-	private $logCollection = null;
+	protected $logCollection = null;
+
+    protected $logRequestAndResponse = true;
+
     public function beforeAction($action)
     {
         if (!parent::beforeAction($action)) {
@@ -25,20 +28,21 @@ class RestController extends \yii\web\Controller
     public function afterAction($action,$result) {
 
         $result = parent::afterAction($action,$result);
-
-        $new_data = [
-        	"request"=>[
-        		"body"=>\Yii::$app->request->rawBody,
-                "Content-Type"=>\Yii::$app->request->headers->get('Content-Type'),
-        	],
-        	"response" => [
-        		"body"=>json_decode($result),
-                "header"=>\Yii::$app->response->headers->toArray(),
-        	],
-        	"time"=>new \MongoDate(),
-        ];
-        //var_dump($new_data);
-        $this->logCollection->insert($new_data);
+        if($this->logRequestAndResponse) {
+            $new_data = [
+                "request"=>[
+                    "body"=>\Yii::$app->request->rawBody,
+                    "Content-Type"=>\Yii::$app->request->headers->get('Content-Type'),
+                ],
+                "response" => [
+                    "body"=>json_decode($result),
+                    "header"=>\Yii::$app->response->headers->toArray(),
+                ],
+                "time"=>new \MongoDate(),
+            ];
+            //var_dump($new_data);
+            $this->logCollection->insert($new_data);
+        }
         return $result;
     }
 
