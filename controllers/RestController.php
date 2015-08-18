@@ -29,14 +29,15 @@ class RestController extends \yii\web\Controller
 
         $result = parent::afterAction($action,$result);
         if($this->logRequestAndResponse) {
+            $body = \Yii::$app->request->rawBody;
             $new_data = [
                 "request"=>[
-                    "body"=>\Yii::$app->request->rawBody,
+                    "body"=>strlen($body)<200 ? $body : substr($body,0,200),
                     "Content-Type"=>\Yii::$app->request->headers->get('Content-Type'),
                     "User-Agent"=>\Yii::$app->request->headers->get('User-Agent'),
                 ],
                 "response" => [
-                    "body"=>json_decode($result),
+                    "body"=>strlen($result)<200 ? json_decode($result) : substr($result,0,200),
                     "header"=>\Yii::$app->response->headers->toArray(),
                 ],
                 "time"=>new \MongoDate(),
