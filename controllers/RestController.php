@@ -33,6 +33,7 @@ class RestController extends \yii\web\Controller
                 "request"=>[
                     "body"=>\Yii::$app->request->rawBody,
                     "Content-Type"=>\Yii::$app->request->headers->get('Content-Type'),
+                    "User-Agent"=>\Yii::$app->request->headers->get('User-Agent'),
                 ],
                 "response" => [
                     "body"=>json_decode($result),
