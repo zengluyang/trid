@@ -14,7 +14,7 @@ class AdminController extends \app\controllers\RestController
     public function actionLog()
     {
 
-        $cursor = $this->logCollection->find();
+        $cursor = $this->logCollection->find()->sort(['time'=>-1]);
         $logs = iterator_to_array($cursor,false);
         return json_encode($logs,JSON_PRETTY_PRINT);
     }
@@ -22,7 +22,7 @@ class AdminController extends \app\controllers\RestController
     public function actionUser() {
         $m = new \MongoClient();
         $userCollection = $m->selectCollection('local','user');
-        $cursor = $userCollection->find();
+        $cursor = $userCollection->find()->sort(['sms_validation_request_timestamp'=>-1]);
         $users = iterator_to_array($cursor,false);
         return json_encode($users,JSON_PRETTY_PRINT);
 
