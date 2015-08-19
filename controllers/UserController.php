@@ -1,6 +1,9 @@
 <?php
 
+
 namespace app\controllers;
+
+use Yii;
 
 class UserController extends \app\controllers\RestController
 {
@@ -148,9 +151,26 @@ class UserController extends \app\controllers\RestController
 
         $new_token = $this->generateToken($content['tel'].$content['username']);
         $hashed_pwd = password_hash($content['password'], PASSWORD_DEFAULT);
-        //should use curl to register user in huanxin here
         $huanxin_id = $content['tel'];
         $huanxin_pwd = $hashed_pwd;
+
+        $huanxin_rlt = Yii::$app->easemobClient->accreditRegister(['username'=>'test5','password'=>'test4']);
+        if(
+            !isset($huanxin_rlt) ||
+            empty($huanxin_rlt) ||
+            (
+                isset($huanxin_rlt['error']) && !empty($huanxin_rlt['error'])
+            )
+        ) {
+            $rlt = [
+                "type" => "register",
+                "success" => false,
+                "error_no" => 7,
+                "error_msg" => "huanxin error.",
+                "huanxin_response" => $huanxin_rlt,
+            ];
+            return json_encode($rlt);
+        }
         $newdata = [
             '$set'=>[
                 'username'=>$content['username'],

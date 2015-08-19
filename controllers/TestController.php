@@ -8,9 +8,9 @@ class TestController extends \app\controllers\RestController
 {
 
     public function actionIndex() {
-    	//var_dump(Yii::$app->easemobClient->url);
+    	
         $rlt = [
-            'data'=>Yii::$app->easemobClient->showFriend('18615794931'),
+            'data'=>Yii::$app->easemobClient->accreditRegister(['username'=>'test4','password'=>'test3']),
         ];
         return json_encode($rlt,JSON_PRETTY_PRINT);
     }
