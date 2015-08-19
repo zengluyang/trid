@@ -7,6 +7,18 @@ $config = [
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'components' => [
+        'urlManager' => [
+            'rules' => [
+            ],
+        ],
+        'easemobClient'=>[
+            'class'=>'app\components\EasemobClient',
+            'client_id'=>'YXA6DG_HwEWEEeWtl78YS2a3EQ',
+            'client_secret'=>'YXA6VgBNRbMukcP8_e9sv1qTIpschpA',
+            'org_name'=>'tridtest',
+            'app_name'=>'tridtest',
+            'api_url'=>'https://a1.easemob.com/',
+        ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'Vj-q6_19tFgv0W2woNApcYR_W0pbJS5t',
