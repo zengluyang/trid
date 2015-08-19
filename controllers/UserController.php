@@ -154,7 +154,7 @@ class UserController extends \app\controllers\RestController
         $huanxin_id = $content['tel'];
         $huanxin_pwd = $hashed_pwd;
 
-        $huanxin_rlt = Yii::$app->easemobClient->accreditRegister(['username'=>'test5','password'=>'test4']);
+        $huanxin_rlt = Yii::$app->easemobClient->accreditRegister(['username'=>$huanxin_id,'password'=>$huanxin_pwd]);
         if(
             !isset($huanxin_rlt) ||
             empty($huanxin_rlt) ||
