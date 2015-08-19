@@ -24,6 +24,87 @@ class UserController extends \app\controllers\RestController
     {
     }
 
+
+    //search user based on some attrs
+    public function actionSearch() {
+        $input = file_get_contents("php://input");
+        $content = json_decode($input,true);
+        $type = 'search_result';
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" =>  $type ,
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if( 
+            !isset($content["type"]) ||
+            $content["type"]!="search" ||
+            !isset($content["token"]) ||
+            !isset($content["tel"]) 
+        ) {
+            $rlt = [
+                "type" => $type,
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+        $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => $type,
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(
+            !isset($user["token"]) ||
+            $user["token"]!=$content["token"]
+        ) {
+            $rlt = [
+                "type" => $type,
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            return json_encode($rlt);
+        }
+        $query = [];
+        if(isset($content['search']['tel'])) {
+            $query['tel']=$content['search']['tel'];
+        }
+        if(isset($content['search']['username'])) {
+            $query['username']=$content['search']['username'];
+        }
+        $cursor = $this->mongoCollection->find($query,['username'=>1,'tel'=>1]);
+        $count = $cursor->count();
+        $limit = $count;
+        $search_rlt = iterator_to_array($cursor,false);
+
+        $rlt = [
+            "type" => $type,
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => null,
+            "count" => $count,
+            "offset" => 0,
+            "limit" => $limit,
+            'users' => $search_rlt,
+        ];
+        return json_encode($rlt);
+
+    }
+
     public function actionSmsValidationCode()
     {
         $input = file_get_contents("php://input");
