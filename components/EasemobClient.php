@@ -124,6 +124,7 @@ class EasemobClient extends Component {
 		$access_token = $this->getToken ();
 		$header [] = 'Authorization: Bearer ' . $access_token;
 		$result = $this->postCurl ( $url, '', $header, $type = 'DELETE' );
+		return json_decode($result,true);
 	}
 	
 	/**
@@ -142,6 +143,7 @@ class EasemobClient extends Component {
 		$access_token = $this->getToken ();
 		$header [] = 'Authorization: Bearer ' . $access_token;
 		$result = $this->postCurl ( $url, '', $header, $type = 'DELETE' );
+		return json_decode($result,true);
 	}
 	
 	/**
@@ -157,6 +159,7 @@ class EasemobClient extends Component {
 		$access_token = $this->getToken ();
 		$header [] = 'Authorization: Bearer ' . $access_token;
 		$result = $this->postCurl ( $url, '', $header );
+		return json_decode($result,true);
 	}
 	/**
 	 * 删除好友
@@ -183,6 +186,7 @@ class EasemobClient extends Component {
 		$access_token = $this->getToken ();
 		$header [] = 'Authorization: Bearer ' . $access_token;
 		$result = $this->postCurl ( $url, '', $header, $type = "GET" );
+		return json_decode($result,true);
 	}
 	// +----------------------------------------------------------------------
 	// | 聊天相关的方法
