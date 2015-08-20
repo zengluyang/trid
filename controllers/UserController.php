@@ -177,7 +177,10 @@ class UserController extends \app\controllers\RestController
                     'huanxin_id' => $huanxin_id,
                     'huanxin_password' => $huanxin_pwd,
                     "verified"=>true,
-                ]
+                ],
+                '$unset'=>[
+                    'validation_code'=>1,
+                ],
             ];
             if(
                 !isset($huanxin_rlt) ||
@@ -199,7 +202,11 @@ class UserController extends \app\controllers\RestController
             $newdata = [
                 '$set'=>[
                     'token'=>$token,
-                ]
+                    "verified"=>true,
+                ],
+                '$unset'=>[
+                    'validation_code'=>1,
+                ],
             ];
             $huanxin_id = $user['huanxin_id'];
             $huanxin_pwd = $user['huanxin_password'];
