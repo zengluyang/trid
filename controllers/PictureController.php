@@ -415,14 +415,15 @@ class PictureController extends \app\controllers\RestController {
         $mongoID = new \MongoID("$picture_id");
         $picture = $this->pictureCollection->findOne(array("_id" => $mongoID),array('like_by'));
         //判断是否已赞
-        if(!in_array($tel, $picture['like_by'])){
+        $user = $this->userColleciton->findOne(['tel'=>$tel],['_id']);
+        $mongoUserID = new \MongoID($user['_id']);
+        if(!in_array($mongoUserID, $picture['like_by'])){
             $this->pictureCollection->update(
                 array("_id" => $mongoID),
                 array('$inc' => array("like" => 1)),
                 array("upsert" => true)
             );
-
-            $newdata = array( '$push' => array('like_by' => "$tel"));
+            $newdata = array( '$push' => array('like_by' => "$mongoUserID"));
             $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
         }
         $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
