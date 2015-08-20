@@ -250,7 +250,7 @@ class UserController extends \app\controllers\RestController
         $new_token = $this->generateToken($content['tel'].$content['username']);
         $hashed_pwd = password_hash($content['password'], PASSWORD_DEFAULT);
         $huanxin_id = $content['tel'];
-        $huanxin_pwd = $hashed_pwd;
+        $huanxin_pwd = $this->generateToken($length=32);
 
         $huanxin_rlt = Yii::$app->easemobClient->accreditRegister(['username'=>$huanxin_id,'password'=>$huanxin_pwd]);
         if(
