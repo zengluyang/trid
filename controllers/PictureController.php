@@ -439,6 +439,93 @@ class PictureController extends \app\controllers\RestController {
     }
 
     /*
+    * 评论
+    * */
+    public function actionComment(){
+        $content = file_get_contents('php://input');
+        $json_data = json_decode($content, true);
+
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => "picture_comment_response",
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(
+            !isset($json_data['type']) ||
+            $json_data['type']!="picture_comment_request" ||
+            !isset($json_data['token']) ||
+            !isset($json_data['tel'])||
+            !isset($json_data['picture_id'])
+        ) {
+            $rlt = [
+                "type" => "picture_comment_response",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+
+        $token = $json_data['token'];
+        $type = $json_data['type'];
+        $tel = $json_data['tel'];
+        $picture_id = $json_data['picture_id'];
+        $comment = $json_data['comment'];
+        //print_r($comment) ;
+        $user = $this->userColleciton->findOne(['tel'=>$tel]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => "picture_comment_response",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(!isset($user["token"])||$token!=$user["token"]) {
+            $rlt = [
+                "type" => "picture_comment_response",
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+
+        $mongoID = new \MongoID("$picture_id");
+        $picture = $this->pictureCollection->findOne(['_id' => $mongoID]);
+
+        $user = $this->userColleciton->findOne(['tel'=>$tel],['_id']);
+        $mongoUserID = new \MongoID($user['_id']);
+
+        $comment["id"] = count($picture['comments']) + 1;//id 为 0 时，表示对图片的直接回复
+        $comment["user_id"] = $mongoUserID;
+        $comment["create_time"] = time();
+        $comment = json_encode($comment);
+        $newdata = array( '$push' => array('comments' => "$comment"));
+        $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
+
+        $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
+        $rlt = [
+            "type" => "picture_comment_response",
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => null,
+            "picture" => $picture,
+        ];
+        return json_encode($rlt);
+    }
+
+    /*
      * 数据库操作：插入数据
      * */
     private function saveTest($pictureName, $words,$user_id)
