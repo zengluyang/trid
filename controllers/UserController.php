@@ -86,7 +86,7 @@ class UserController extends \app\controllers\RestController
         if(isset($content['search']['username'])) {
             $query['username']=$content['search']['username'];
         }
-        $cursor = $this->mongoCollection->find($query,['username'=>1,'tel'=>1]);
+        $cursor = $this->mongoCollection->find($query,['username'=>1,'tel'=>1,'huanxin_id'=>1]);
         $count = $cursor->count();
         $limit = $count;
         $search_rlt = iterator_to_array($cursor,false);
@@ -172,7 +172,6 @@ class UserController extends \app\controllers\RestController
                 "error_msg" => "json decode failed.",
             ];
             return json_encode($rlt);
-            return;
         }
 
         if(
@@ -282,6 +281,79 @@ class UserController extends \app\controllers\RestController
             "error_msg" => null,
         ];
         return json_encode($rlt);
+
+    }
+
+    //get self profile
+    public function actionProfile() {
+        $input = file_get_contents("php://input");
+        $content = json_decode($input,true);
+        $type = 'profile_result';
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" =>  $type ,
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if( 
+            !isset($content["type"]) ||
+            $content["type"]!="profile" ||
+            !isset($content["token"]) ||
+            !isset($content["tel"])
+        ) {
+            $rlt = [
+                "type" => $type,
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+        $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => $type,
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(
+            !isset($user["token"]) ||
+            $user["token"]!=$content["token"]
+        ) {
+            $rlt = [
+                "type" => $type,
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+            
+        $rlt = [
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => null,
+            "profile" => [
+                "_id"=>$user["_id"],
+                "username"=>$user["username"],
+                "huanxin_id"=>$user["huanxin_id"],
+                "huanxin_password "=> $user["huanxin_password"],
+                "pf_answers" => isset($user["pf_answers"]) ? $user["pf_answers"] : null,
+            ],
+        ];
+        return json_encode($rlt);
+
 
     }
 
