@@ -44,7 +44,8 @@ class UserController extends \app\controllers\RestController
             !isset($content["type"]) ||
             $content["type"]!="search" ||
             !isset($content["token"]) ||
-            !isset($content["tel"]) 
+            !isset($content["tel"]) ||
+            !isset($content["search"])
         ) {
             $rlt = [
                 "type" => $type,
@@ -86,8 +87,25 @@ class UserController extends \app\controllers\RestController
         if(isset($content['search']['username'])) {
             $query['username']=$content['search']['username'];
         }
-        $cursor = $this->mongoCollection->find($query,['username'=>1,'tel'=>1]);
+        if(isset($content['search']['_id'])) {
+            try {
+                $query['_id'] = new \MongoId($content['search']['_id']);
+            } catch (\MongoException $ex) {
+                $query['_id'] = null;
+            }
+        }
+        $cursor = $this->mongoCollection->find($query,['username'=>1,'tel'=>1,'huanxin_id'=>1]);
         $count = $cursor->count();
+        if($count==0) {
+            $rlt = [
+                "type" => $type,
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "user not found.",
+            ];
+            return json_encode($rlt);
+        }
+        
         $limit = $count;
         $search_rlt = iterator_to_array($cursor,false);
 
@@ -148,12 +166,67 @@ class UserController extends \app\controllers\RestController
 
         $token = $this->generateToken($content["tel"]);
         $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
-        $newdata = ['$set'=>['token'=>$token,"verified"=>true]];
-        $this->mongoCollection->update(["tel"=>$content["tel"]],$newdata,["upsert"=>true]);
+        if(!isset($user['huanxin_id'])) {
+            //first time login
+            $huanxin_id = $content['tel'];
+            $huanxin_pwd = $this->generateToken($content['tel'],$length=32);
+            $huanxin_rlt = Yii::$app->easemobClient->accreditRegister(['username'=>$huanxin_id,'password'=>$huanxin_pwd]);
+            $newdata = [
+                '$set'=>[
+                    'token'=>$token,
+                    'huanxin_id' => $huanxin_id,
+                    'huanxin_password' => $huanxin_pwd,
+                    "verified"=>true,
+                ],
+                '$unset'=>[
+                    'validation_code'=>1,
+                ],
+            ];
+            if(
+                !isset($huanxin_rlt) ||
+                empty($huanxin_rlt) ||
+                (
+                    isset($huanxin_rlt['error']) && !empty($huanxin_rlt['error'])
+                )
+            ) {
+                $rlt = [
+                    "type" => "sms_validation_result",
+                    "success" => false,
+                    "error_no" => 4,
+                    "error_msg" => "huanxin error.",
+                    "huanxin_response" => $huanxin_rlt,
+                ];
+                return json_encode($rlt);
+            }
+        } else {
+            $newdata = [
+                '$set'=>[
+                    'token'=>$token,
+                    "verified"=>true,
+                ],
+                '$unset'=>[
+                    'validation_code'=>1,
+                ],
+            ];
+            $huanxin_id = $user['huanxin_id'];
+            $huanxin_pwd = $user['huanxin_password'];
+        }
+
+        if(!$this->mongoCollection->update(["tel"=>$content["tel"]],$newdata)) {
+            $rlt = [
+                "type" => "sms_validation_result",
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "database error.",
+            ];
+            return json_encode($rlt);
+        }
         $rlt = [
             "type" => "sms_validation_result",
             "success" => true,
             "token" => $token,
+            "huanxin_id"=>$huanxin_id,
+            "huanxin_pwd"=>$huanxin_pwd,
             "error_no" => 0,
             "error_msg" => null,   
         ];
@@ -161,42 +234,41 @@ class UserController extends \app\controllers\RestController
     }
 
 
-    public function actionRegister() {
+    //get self profile
+    public function actionProfile() {
         $input = file_get_contents("php://input");
         $content = json_decode($input,true);
+        $type = 'profile_result';
         if(json_last_error()!=JSON_ERROR_NONE) {
             $rlt = [
-                "type" => "register",
+                "type" =>  $type ,
                 "success" => false,
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
             ];
             return json_encode($rlt);
-            return;
         }
 
-        if(
+        if( 
             !isset($content["type"]) ||
-            $content["type"]!="register" ||
-            !isset($content["username"]) ||
-            !isset($content["password"]) ||
+            $content["type"]!="profile" ||
             !isset($content["token"]) ||
             !isset($content["tel"])
         ) {
             $rlt = [
-                "type" => "register",
+                "type" => $type,
                 "success" => false,
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
             ];
-            return json_encode($rlt);       
+            return json_encode($rlt);
         }
 
         $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
 
         if($user==null) {
             $rlt = [
-                "type" => "register",
+                "type" => $type,
                 "success" => false,
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
@@ -209,7 +281,7 @@ class UserController extends \app\controllers\RestController
             $user["token"]!=$content["token"]
         ) {
             $rlt = [
-                "type" => "register",
+                "type" => $type,
                 "success" => false,
                 "error_no" => 4,
                 "error_msg" => "token not valid.",
@@ -217,167 +289,25 @@ class UserController extends \app\controllers\RestController
             return json_encode($rlt);
         }
 
-        if(
-            !isset($user["verified"]) ||
-            !$user["verified"]
-        ) {
-            $rlt = [
-                "type" => "register",
-                "success" => false,
-                "error_no" => 5,
-                "error_msg" => "tel not verified.",
-            ];
-            return json_encode($rlt);
-        }
-
-        $new_token = $this->generateToken($content['tel'].$content['username']);
-        $hashed_pwd = password_hash($content['password'], PASSWORD_DEFAULT);
-        $huanxin_id = $content['tel'];
-        $huanxin_pwd = $hashed_pwd;
-
-        $huanxin_rlt = Yii::$app->easemobClient->accreditRegister(['username'=>$huanxin_id,'password'=>$huanxin_pwd]);
-        if(
-            !isset($huanxin_rlt) ||
-            empty($huanxin_rlt) ||
-            (
-                isset($huanxin_rlt['error']) && !empty($huanxin_rlt['error'])
-            )
-        ) {
-            $rlt = [
-                "type" => "register",
-                "success" => false,
-                "error_no" => 7,
-                "error_msg" => "huanxin error.",
-                "huanxin_response" => $huanxin_rlt,
-            ];
-            return json_encode($rlt);
-        }
-        $newdata = [
-            '$set'=>[
-                'username'=>$content['username'],
-                'password'=>$hashed_pwd,
-                'token'=>$new_token,
-                'huanxin_id' => $huanxin_id,
-                'huanxin_password' => $huanxin_pwd,
-            ]
-        ];
-
-        if(!$this->mongoCollection->update(["tel"=>$content["tel"]],$newdata)) {
-            $rlt = [
-                "type" => "register",
-                "success" => false,
-                "error_no" => 6,
-                "error_msg" => "database error.",
-            ];
-            return json_encode($rlt);
-        }
-
+            
         $rlt = [
-            "type" => "register",
-            "token" => $new_token,
-            'huanxin_id' => $huanxin_id,
-            'huanxin_password' => $huanxin_pwd,
             "success" => true,
             "error_no" => 0,
             "error_msg" => null,
+            "profile" => [
+                "_id"=>$user["_id"],
+                "username"=>$user["username"],
+                "huanxin_id"=>$user["huanxin_id"],
+                "huanxin_password "=> $user["huanxin_password"],
+                "pf_answers" => isset($user["pf_answers"]) ? $user["pf_answers"] : null,
+            ],
         ];
         return json_encode($rlt);
 
+
     }
 
-    public function actionLogin() {
-        $input = file_get_contents("php://input");
-        $content = json_decode($input,true);
-        if(json_last_error()!=JSON_ERROR_NONE) {
-            $rlt = [
-                "type" => "login",
-                "success" => false,
-                "error_no" => 1,
-                "error_msg" => "json decode failed.",
-            ];
-            return json_encode($rlt);
-            return;
-        }
 
-        if(
-            !isset($content["type"]) ||
-            $content["type"]!="login" ||
-            !isset($content["password"]) ||
-            !isset($content["tel"])
-        ) {
-            $rlt = [
-                "type" => "login",
-                "success" => false,
-                "error_no" => 2,
-                "error_msg" => "input not valid.",
-            ];
-            return json_encode($rlt);       
-        }
-
-        $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
-
-        if($user==null) {
-            $rlt = [
-                "type" => "login",
-                "success" => false,
-                "error_no" => 3,
-                "error_msg" => "tel not found.",
-            ];
-            return json_encode($rlt);
-        }
-
-        if(
-            !isset($user["password"]) ||
-            !password_verify($content["password"],$user["password"])
-        ) {
-            $rlt = [
-                "type" => "login",
-                "success" => false,
-                "error_no" => 5,
-                "error_msg" => "password not valid.",
-            ];
-            usleep(500000);
-            return json_encode($rlt);
-        }
-
-        if(
-            !isset($user["verified"]) ||
-            !$user["verified"]
-        ) {
-            $rlt = [
-                "type" => "login",
-                "success" => false,
-                "error_no" => 6,
-                "error_msg" => "tel not verified.",
-            ];
-            return json_encode($rlt);
-        }
-
-        $new_token = $this->generateToken($content['tel']);
-        $newdata = [
-            '$set'=>[
-                'token' => $new_token,
-            ]
-        ];
-        if(!$this->mongoCollection->update(["tel"=>$content["tel"]],$newdata)) {
-            $rlt = [
-                "type" => "login",
-                "success" => false,
-                "error_no" => 7,
-                "error_msg" => "database error.",
-            ];
-            return json_encode($rlt);
-        }
-
-        $rlt = [
-            "type" => "login",
-            "token" => $new_token,
-            "success" => true,
-            "error_no" => 0,
-            "error_msg" => null,
-        ];
-        return json_encode($rlt);
-    }
 
     public function actionSmsValidationRequest()
     {
@@ -467,6 +397,9 @@ class UserController extends \app\controllers\RestController
 
     private function validateValidationCode($tel,$code) {
         $user = $this->mongoCollection->findOne(['tel'=>$tel]);
+        if($user==null) {
+            return false;
+        }
         if(!isset($user["validation_code"])) {
             return false;
         }
