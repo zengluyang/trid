@@ -44,7 +44,8 @@ class UserController extends \app\controllers\RestController
             !isset($content["type"]) ||
             $content["type"]!="search" ||
             !isset($content["token"]) ||
-            !isset($content["tel"]) 
+            !isset($content["tel"]) ||
+            !isset($content["search"])
         ) {
             $rlt = [
                 "type" => $type,
@@ -86,8 +87,25 @@ class UserController extends \app\controllers\RestController
         if(isset($content['search']['username'])) {
             $query['username']=$content['search']['username'];
         }
+        if(isset($content['search']['_id'])) {
+            try {
+                $query['_id'] = new \MongoId($content['search']['_id']);
+            } catch (\MongoException $ex) {
+                $query['_id'] = null;
+            }
+        }
         $cursor = $this->mongoCollection->find($query,['username'=>1,'tel'=>1,'huanxin_id'=>1]);
         $count = $cursor->count();
+        if($count==0) {
+            $rlt = [
+                "type" => $type,
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "user not found.",
+            ];
+            return json_encode($rlt);
+        }
+        
         $limit = $count;
         $search_rlt = iterator_to_array($cursor,false);
 
