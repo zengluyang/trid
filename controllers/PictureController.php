@@ -506,12 +506,15 @@ class PictureController extends \app\controllers\RestController {
 
         $user = $this->userColleciton->findOne(['tel'=>$tel],['_id']);
         $mongoUserID = new \MongoID($user['_id']);
-
-        $comment["id"] = count($picture['comments']) + 1;//id 为 0 时，表示对图片的直接回复
+        if(isset($picture['comments'])) {
+            $comment["id"] = count($picture['comments']) + 1;//id 为 0 时，表示对图片的直接回复
+        } else {
+            $comment["id"] = 1;
+        }
+        
         $comment["user_id"] = $mongoUserID;
         $comment["create_time"] = time();
-        $comment = json_encode($comment);
-        $newdata = array( '$push' => array('comments' => "$comment"));
+        $newdata = array( '$push' => array('comments' => $comment));
         $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
 
         $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
