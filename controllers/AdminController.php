@@ -28,6 +28,15 @@ class AdminController extends \app\controllers\RestController
 
     }
 
+    public function actionPicture() {
+        $m = new \MongoClient();
+        $userCollection = $m->selectCollection('local','picture');
+        $cursor = $userCollection->find()->sort(['createtime'=>-1]);
+        $users = iterator_to_array($cursor,false);
+        return json_encode($users,JSON_PRETTY_PRINT);
+
+    }
+
     public function actionUpdate()
     {
 
