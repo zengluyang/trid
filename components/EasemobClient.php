@@ -368,7 +368,8 @@ class EasemobClient extends Component {
 				$result = $this->postCurl ( $url, $option);
 				$result ['expires_in'] = $result ['expires_in'] + time ();
 				$result = json_decode($result);
-				$new_data = ['access_token'=>$result ['access_token'],'expires_in'=>['expires_in']];
+				//$new_data = ['access_token'=>$result ['access_token'],'expires_in'=>['expires_in']];
+				$new_data = ['$set'=>['access_token'=>$result['access_token'], 'expires_in'=>$result['expires_in']]];
 				$this->dbConfigCollection->update(['url'=>$this->url],$new_data);
 				return $result ['access_token'];
 			} 
@@ -376,7 +377,7 @@ class EasemobClient extends Component {
 		} else {
 			$result = $this->postCurl ( $url, $option );
 			$result = json_decode($result,true);
-			var_dump($result);
+			//var_dump($result);
 			$result ['expires_in'] = $result ['expires_in'] + time ();
 			$new_data = ['url'=>$this->url,'access_token'=>$result ['access_token'],'expires_in'=>$result['expires_in']];
 			$this->dbConfigCollection->insert($new_data);
