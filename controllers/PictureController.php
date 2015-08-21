@@ -510,7 +510,19 @@ class PictureController extends \app\controllers\RestController {
         }
 
 
-        $mongoID = new \MongoID("$picture_id");
+        
+        try {
+            $mongoID = new \MongoID("$picture_id");
+        } catch (\MongoException $ex) {
+            $rlt = [
+                "type" => "picture_comment_response",
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "picture_id not valid.",
+            ];
+            return json_encode($rlt);
+        }
+        
         $picture = $this->pictureCollection->findOne(['_id' => $mongoID]);
 
         $user = $this->userColleciton->findOne(['tel'=>$tel],['_id']);
