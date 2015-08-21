@@ -57,6 +57,7 @@ $config = [
             'class' => 'yii\web\Response',
             'on beforeSend' => function ($event) {
                 $response = $event->sender;
+                $response->format = yii\web\Response::FORMAT_JSON;
                 if ($response->isSuccessful != true) {
                     $response->data = [
                         'success' => $response->isSuccessful,
