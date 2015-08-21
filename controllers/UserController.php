@@ -296,7 +296,7 @@ class UserController extends \app\controllers\RestController
             "error_msg" => null,
             "profile" => [
                 "_id"=>$user["_id"],
-                "username"=>$user["username"],
+                "username"=> isset($user["username"]) ? isset($user["username"]) : null,
                 "huanxin_id"=>$user["huanxin_id"],
                 "huanxin_password "=> $user["huanxin_password"],
                 "pf_answers" => isset($user["pf_answers"]) ? $user["pf_answers"] : null,
