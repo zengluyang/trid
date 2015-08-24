@@ -391,9 +391,10 @@ class UserController extends \app\controllers\RestController
         if($timediff<60) {
             return false;
         }
-        // call 3rd party sms service
         $validation_code = '123456';
-        $newdata = ['$set'=>['validation_code'=>'123456','sms_validation_request_timestamp'=>time()]];
+        //validation_code = $this->generateValidationCode();
+        //$result = Yii::$app->yuntongxunSmsClient->sendTemplateSMS($tel ,array($validation_code,'5'),"1");
+        $newdata = ['$set'=>['validation_code'=>$validation_code,'sms_validation_request_timestamp'=>time()]];
         $this->mongoCollection->update(["tel"=>$tel],$newdata,["upsert"=>true]);
         return true;
     }
@@ -408,6 +409,18 @@ class UserController extends \app\controllers\RestController
         }
 
         return $user["validation_code"] == $code;
+    }
+
+    protected function generateValidationCode($length=6) {
+        $characters = '0123456789';
+        $charactersLength = strlen($characters)-1;
+        $token = '';
+        //select some random characters
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $characters[mt_rand(0, $charactersLength)];
+        }        
+
+        return $token;
     }
 
 }
