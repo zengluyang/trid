@@ -8,9 +8,8 @@ class TestController extends \app\controllers\RestController
 {
 
     public function actionIndex() {
-    	
         $rlt = [
-            'data'=>Yii::$app->easemobClient->accreditRegister(['username'=>'test4','password'=>'test3']),
+            'data'=>Yii::$app->yuntongxunSmsClient->sendTemplateSMS("13800000000" ,array('6532','5'),"1"),
         ];
         return json_encode($rlt,JSON_PRETTY_PRINT);
     }

@@ -390,7 +390,7 @@ class EasemobClient extends Component {
 	 */
 	private function postCurl($url, $option, $header = [], $type = 'POST') {
 		$curl = curl_init (); // 启动一个CURL会话
-		//curl_setopt ( $curl, CURLOPT_PROXY, "http://10.169.95.174:3388");
+		curl_setopt ( $curl, CURLOPT_PROXY, "http://10.169.95.174:3388");
 		curl_setopt ( $curl, CURLOPT_URL, $url ); // 要访问的地址
 		curl_setopt ( $curl, CURLOPT_SSL_VERIFYPEER, FALSE ); // 对认证证书来源的检查
 		curl_setopt ( $curl, CURLOPT_SSL_VERIFYHOST, FALSE ); // 从证书中检查SSL加密算法是否存在

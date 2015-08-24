@@ -19,6 +19,15 @@ $config = [
             'app_name'=>'tridtest',
             'api_url'=>'https://a1.easemob.com/',
         ],
+        'yuntongxunSmsClient'=>[
+            'class'=>'app\components\YuntongxunSmsClient',
+            'AccountSid'=>'aaf98f894f4fbec2014f5dc7d88305ea',
+            'AccountToken'=>'eeb36c5a66a3442fb688a96850f3c93a',
+            'AppId'=>'8a48b5514f4fc588014f5dc89b7a1496',
+            'ServerIP'=>'sandboxapp.cloopen.com',
+            'ServerPort'=>'8883',
+            'SoftVersion'=>'2013-12-26',
+        ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'Vj-q6_19tFgv0W2woNApcYR_W0pbJS5t',
