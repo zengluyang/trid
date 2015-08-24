@@ -423,7 +423,6 @@ class PictureController extends \app\controllers\RestController {
         }
         
         $picture = $this->pictureCollection->findOne(array("_id" => $mongoID),array('like_by'));
-        //判断是否已赞
         $user = $this->userColleciton->findOne(['tel'=>$tel],['_id']);
         $mongoUserID = new \MongoID($user['_id']);
         if(!in_array($mongoUserID, $picture['like_by'])){
@@ -445,6 +444,110 @@ class PictureController extends \app\controllers\RestController {
             "picture" => $picture,
         ];
         return json_encode($rlt);
+    }
+
+    /*
+    * 取消点赞
+    * */
+    public function actionUnlike(){
+        $content = file_get_contents('php://input');
+        $json_data = json_decode($content, true);
+
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => "picture_unlike_response",
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(
+            !isset($json_data['type']) ||
+            $json_data['type']!="picture_unlike_request" ||
+            !isset($json_data['token']) ||
+            !isset($json_data['tel'])||
+            !isset($json_data['picture_id'])
+        ) {
+            $rlt = [
+                "type" => "picture_unlike_response",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+
+        $token = $json_data['token'];
+        $type = $json_data['type'];
+        $tel = $json_data['tel'];
+        $picture_id = $json_data['picture_id'];
+        $user = $this->userColleciton->findOne(['tel'=>$tel]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => "picture_unlike_response",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(!isset($user["token"])||$token!=$user["token"]) {
+            $rlt = [
+                "type" => "picture_unlike_response",
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+        try {
+            $mongoID = new \MongoID("$picture_id");
+        } catch (\MongoException $ex) {
+            $rlt = [
+                "type" => "picture_like_response",
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "picture_id not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+        $picture = $this->pictureCollection->findOne(['_id' => $mongoID],['like_by']);
+        $user = $this->userColleciton->findOne(['tel'=>$tel],['_id']);
+        $mongoUserID = new \MongoID($user['_id']);
+        if(!in_array($mongoUserID, $picture['like_by'])){
+            $rlt = [
+                "type" => "picture_like_response",
+                "success" => false,
+                "error_no" => 6,
+                "error_msg" => "permission denied.",
+            ];
+            return  json_encode($rlt);
+        }else{
+            $this->pictureCollection->update(
+                array("_id" => $mongoID),
+                array('$inc' => array("like" => -1)),
+                array("upsert" => true)
+            );
+            $newdata = array( '$pull' => array('like_by' => "$mongoUserID"));
+            $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
+
+            $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
+            $rlt = [
+                "type" => "picture_like_response",
+                "success" => true,
+                "error_no" => 0,
+                "error_msg" => null,
+                "picture" => $picture,
+            ];
+            return  json_encode($rlt);
+        }
     }
 
     /*
