@@ -510,7 +510,7 @@ class PictureController extends \app\controllers\RestController {
             $mongoID = new \MongoID("$picture_id");
         } catch (\MongoException $ex) {
             $rlt = [
-                "type" => "picture_like_response",
+                "type" => "picture_unlike_response",
                 "success" => false,
                 "error_no" => 5,
                 "error_msg" => "picture_id not valid.",
@@ -523,7 +523,7 @@ class PictureController extends \app\controllers\RestController {
         $mongoUserID = new \MongoID($user['_id']);
         if(!in_array($mongoUserID, $picture['like_by'])){
             $rlt = [
-                "type" => "picture_like_response",
+                "type" => "picture_unlike_response",
                 "success" => false,
                 "error_no" => 6,
                 "error_msg" => "permission denied.",
@@ -540,7 +540,7 @@ class PictureController extends \app\controllers\RestController {
 
             $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
             $rlt = [
-                "type" => "picture_like_response",
+                "type" => "picture_unlike_response",
                 "success" => true,
                 "error_no" => 0,
                 "error_msg" => null,
