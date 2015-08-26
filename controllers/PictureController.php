@@ -423,15 +423,15 @@ class PictureController extends \app\controllers\RestController {
         }
         
         $picture = $this->pictureCollection->findOne(array("_id" => $mongoID),array('like_by'));
-        $user = $this->userColleciton->findOne(['tel'=>$tel],['_id']);
-        $mongoUserID = new \MongoID($user['_id']);
-        if(!in_array($mongoUserID, $picture['like_by'])){
+        $user = $this->userColleciton->findOne(['tel'=>$tel],['username']);
+        $nick = $user['username'];
+        if(!in_array($nick, $picture['like_by'])){
             $this->pictureCollection->update(
                 array("_id" => $mongoID),
                 array('$inc' => array("like" => 1)),
                 array("upsert" => true)
             );
-            $newdata = array( '$push' => array('like_by' => "$mongoUserID"));
+            $newdata = array( '$push' => array('like_by' => "$nick"));
             $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
         }
         $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
@@ -519,9 +519,9 @@ class PictureController extends \app\controllers\RestController {
         }
 
         $picture = $this->pictureCollection->findOne(['_id' => $mongoID],['like_by']);
-        $user = $this->userColleciton->findOne(['tel'=>$tel],['_id']);
-        $mongoUserID = new \MongoID($user['_id']);
-        if(!in_array($mongoUserID, $picture['like_by'])){
+        $user = $this->userColleciton->findOne(['tel'=>$tel],['username']);
+        $nick = $user['username'];
+        if(!in_array($nick, $picture['like_by'])){
             $rlt = [
                 "type" => "picture_unlike_response",
                 "success" => false,
@@ -535,7 +535,7 @@ class PictureController extends \app\controllers\RestController {
                 array('$inc' => array("like" => -1)),
                 array("upsert" => true)
             );
-            $newdata = array( '$pull' => array('like_by' => "$mongoUserID"));
+            $newdata = array( '$pull' => array('like_by' => "$nick"));
             $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
 
             $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
