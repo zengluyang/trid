@@ -13,8 +13,7 @@ class AdminController extends \app\controllers\RestController
 
     public function actionLog()
     {
-
-        $cursor = $this->logCollection->find()->sort(['time'=>-1]);
+        $cursor = $this->logCollection->find()->sort(['time'=>-1])->limit(40);
         $logs = iterator_to_array($cursor,false);
         return json_encode($logs,JSON_PRETTY_PRINT);
     }
