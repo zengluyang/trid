@@ -661,7 +661,7 @@ class PictureController extends \app\controllers\RestController {
         $like = 0;
         $like_by = array();
         $comments = array();
-        $newdata = array("picture" => "$pictureName", "word" => $words,"like" => $like,"like_by" => $like_by,"comments" => "$comments","createtime" => $time,"created_by"=>$user_id);
+        $newdata = array("picture" => "$pictureName", "word" => $words,"like" => $like,"like_by" => $like_by,"comments" => $comments,"createtime" => $time,"created_by"=>$user_id);
         $this->pictureCollection->insert($newdata);
         return true;
     }
