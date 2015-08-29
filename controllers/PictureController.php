@@ -647,7 +647,7 @@ class PictureController extends \app\controllers\RestController {
         }
         
         $picture = $this->pictureCollection->findOne(['_id' => $mongoID]);
-        $user = $this->userColleciton->findOne(['tel'=>$tel],['_id']);
+        $user = $this->userColleciton->findOne(['tel'=>$tel]);
         if(!isset($user['username'])){
             $rlt = [
                 "type" => "picture_like_response",
