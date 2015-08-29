@@ -333,7 +333,7 @@ class PictureController extends \app\controllers\RestController {
             ];
             return json_encode($rlt);
         }
-        $cursor = $this->pictureCollection->find();
+        $cursor = $this->pictureCollection->find()->sort(['createtime' => -1]);
         $count = $cursor->count();
         $limit = $count;
         $pics = iterator_to_array($cursor,false);
