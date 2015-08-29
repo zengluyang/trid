@@ -647,29 +647,38 @@ class PictureController extends \app\controllers\RestController {
         }
         
         $picture = $this->pictureCollection->findOne(['_id' => $mongoID]);
-
         $user = $this->userColleciton->findOne(['tel'=>$tel],['_id']);
-        $mongoUserID = new \MongoID($user['_id']);
-        if(isset($picture['comments'])) {
-            $comment["id"] = count($picture['comments']) + 1;//id 为 0 时，表示对图片的直接回复
-        } else {
-            $comment["id"] = 1;
-        }
-        
-        $comment["user_id"] = $mongoUserID;
-        $comment["create_time"] = time();
-        $newdata = array( '$push' => array('comments' => $comment));
-        $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
+        if(!isset($user['username'])){
+            $rlt = [
+                "type" => "picture_like_response",
+                "success" => false,
+                "error_no" =>6,
+                "error_msg" => "username do not exist.",
+            ];
+            return json_encode($rlt);
+        } else{
+            $nick = $user['username'];
+            if(isset($picture['comments'])) {
+                $comment["id"] = count($picture['comments']) + 1;//id 为 0 时，表示对图片的直接回复
+            } else {
+                $comment["id"] = 1;
+            }
 
-        $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
-        $rlt = [
-            "type" => "picture_comment_response",
-            "success" => true,
-            "error_no" => 0,
-            "error_msg" => null,
-            "picture" => $picture,
-        ];
-        return json_encode($rlt);
+            $comment["nick"] = $nick;
+            $comment["create_time"] = time();
+            $newdata = array( '$push' => array('comments' => $comment));
+            $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
+
+            $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
+            $rlt = [
+                "type" => "picture_comment_response",
+                "success" => true,
+                "error_no" => 0,
+                "error_msg" => null,
+                "picture" => $picture,
+            ];
+            return json_encode($rlt);
+        }
     }
 
     /*
