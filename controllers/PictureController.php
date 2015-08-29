@@ -423,27 +423,37 @@ class PictureController extends \app\controllers\RestController {
         }
         
         $picture = $this->pictureCollection->findOne(array("_id" => $mongoID),array('like_by'));
-        $user = $this->userColleciton->findOne(['tel'=>$tel],['username']);
-        $nick = $user['username'];
-        if(!in_array($nick, $picture['like_by'])){
-            $this->pictureCollection->update(
-                array("_id" => $mongoID),
-                array('$inc' => array("like" => 1)),
-                array("upsert" => true)
-            );
-            $newdata = array( '$push' => array('like_by' => "$nick"));
-            $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
-        }
-        $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
+        $user = $this->userColleciton->findOne(['tel'=>$tel]);
+        if(!isset($user['username'])){
+            $rlt = [
+                "type" => "picture_like_response",
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "username do not exist.",
+            ];
+            return json_encode($rlt);
+        } else{
+            $nick = $user['username'];
+            if(!in_array($nick, $picture['like_by'])){
+                $this->pictureCollection->update(
+                    array("_id" => $mongoID),
+                    array('$inc' => array("like" => 1)),
+                    array("upsert" => true)
+                );
+                $newdata = array( '$push' => array('like_by' => "$nick"));
+                $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
+            }
+            $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
 
-        $rlt = [
-            "type" => "picture_like_response",
-            "success" => true,
-            "error_no" => 0,
-            "error_msg" => null,
-            "picture" => $picture,
-        ];
-        return json_encode($rlt);
+            $rlt = [
+                "type" => "picture_like_response",
+                "success" => true,
+                "error_no" => 0,
+                "error_msg" => null,
+                "picture" => $picture,
+            ];
+            return json_encode($rlt);
+        }
     }
 
     /*
@@ -519,34 +529,44 @@ class PictureController extends \app\controllers\RestController {
         }
 
         $picture = $this->pictureCollection->findOne(['_id' => $mongoID],['like_by']);
-        $user = $this->userColleciton->findOne(['tel'=>$tel],['username']);
-        $nick = $user['username'];
-        if(!in_array($nick, $picture['like_by'])){
+        $user = $this->userColleciton->findOne(['tel'=>$tel]);
+        if(!isset($user['username'])){
             $rlt = [
-                "type" => "picture_unlike_response",
+                "type" => "picture_like_response",
                 "success" => false,
                 "error_no" => 6,
-                "error_msg" => "permission denied.",
+                "error_msg" => "username do not exist.",
             ];
-            return  json_encode($rlt);
-        }else{
-            $this->pictureCollection->update(
-                array("_id" => $mongoID),
-                array('$inc' => array("like" => -1)),
-                array("upsert" => true)
-            );
-            $newdata = array( '$pull' => array('like_by' => "$nick"));
-            $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
+            return json_encode($rlt);
+        } else{
+            $nick = $user['username'];
+            if(!in_array($nick, $picture['like_by'])){
+                $rlt = [
+                    "type" => "picture_unlike_response",
+                    "success" => false,
+                    "error_no" => 6,
+                    "error_msg" => "permission denied.",
+                ];
+                return  json_encode($rlt);
+            }else{
+                $this->pictureCollection->update(
+                    array("_id" => $mongoID),
+                    array('$inc' => array("like" => -1)),
+                    array("upsert" => true)
+                );
+                $newdata = array( '$pull' => array('like_by' => "$nick"));
+                $this->pictureCollection->update(array("_id" => $mongoID), $newdata);
 
-            $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
-            $rlt = [
-                "type" => "picture_unlike_response",
-                "success" => true,
-                "error_no" => 0,
-                "error_msg" => null,
-                "picture" => $picture,
-            ];
-            return  json_encode($rlt);
+                $picture = $this->pictureCollection->findOne(array("_id" => $mongoID));
+                $rlt = [
+                    "type" => "picture_unlike_response",
+                    "success" => true,
+                    "error_no" => 0,
+                    "error_msg" => null,
+                    "picture" => $picture,
+                ];
+                return  json_encode($rlt);
+            }
         }
     }
 
