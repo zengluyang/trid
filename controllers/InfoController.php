@@ -108,16 +108,16 @@ class InfoController extends RestController
 
     private function check_sex($sex)
     {
-        if($sex == null) {
+        if(!isset($sex)) {
             return false;
         }
-
-        return $sex == 0 || $sex == 1;
+	
+	return $sex == 0 || $sex == 1;
     }
 
     private function check_birthdate($birthdate) 
     {
-        if($birthdate == null || 
+        if(!isset($birthdate) || 
             !isset($birthdate["month"]) ||
             !isset($birthdate["day"]) ||
             !isset($birthdate["year"])
