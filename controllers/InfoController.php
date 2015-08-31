@@ -369,7 +369,7 @@ class InfoController extends RestController
 
         $pf_ids_sent = [];
 
-        if(isset($user["pf_sent"]) {
+        if(isset($user["pf_sent"])) {
             $pf_sent = $user["pf_sent"];
 
             foreach($pf_sent as $item) {
