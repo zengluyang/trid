@@ -188,9 +188,9 @@ class InfoController extends RestController
             $content["type"] != $req_type ||
             !isset($content["tel"]) ||
             !isset($content["token"]) ||
-            !isset($countet["count"]) ||
+            !isset($content["count"]) ||
             !isset($content["pf_answer"]) ||
-            !$this->check_pf_answer($content["count"], $content["pf_answer"])
+	    !$this->check_pf_answer($content["count"], $content["pf_answer"]) 
         ) {
             $rlt = [
                 "type" => $rlt_type,
@@ -236,7 +236,7 @@ class InfoController extends RestController
             if(!in_array($item, $pf_answer_to_push)) {
                 $criteria = ["tel" => $content["tel"], 'pf_answer.pf_id' => $item["pf_id"]];
                 $newdata = ['$set' => ['pf_answer.$.choice' => $item["choice"]]];
-                if(!$this->pfCollection->update($criteria, $newdata)) {
+                if(!$this->mongoCollection->update($criteria, $newdata)) {
                     $rlt = [
                         "type" => $rlt_type,
                         "success" => false,
@@ -298,6 +298,7 @@ class InfoController extends RestController
         }
 
         $pf_ids = $this->get_all_pf_id();
+	$id_in_pf_answer = [];
 
         foreach($pf_answer as $item) {
             if(!is_array($item) ||
@@ -307,13 +308,19 @@ class InfoController extends RestController
                 return false;
             }
 
-            if($item["choice"] != 0 && $item["choice" != 1]) {
+            if($item["choice"] != 0 && $item["choice"] != 1) {
                 return false;
             } 
 
-            if(!in_array($item["pf_id"], $pf_ids) {
+            if(!in_array($item["pf_id"], $pf_ids)) {
                 return false;
             }
+	   //check for repeated pf_id in pf_answer. 
+	    if(in_array($item["pf_id"], $id_in_pf_answer)) {
+		return false;
+	    } else {
+		$id_in_pf_answer[] = $item["pf_id"];
+	    }
         }
         return true;
     }
@@ -325,7 +332,7 @@ class InfoController extends RestController
         foreach($cursor as $doc) {
             $pf_ids[] = $doc["pf_id"];
         }
-        return pf_ids;
+        return $pf_ids;
     }
 
     private function find_pf_answer_to_push($pf_answer, $pf_answer_in_db) {
@@ -339,7 +346,7 @@ class InfoController extends RestController
                 }
             }
 
-            if(!tag) {
+            if(!$tag) {
                 $pf_answer_to_push[] = $item1;
             }
         }
