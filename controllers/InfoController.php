@@ -116,7 +116,7 @@ class InfoController extends RestController
         $content = json_decode($input,true);
         if(json_last_error() != JSON_ERROR_NONE) {
             $rlt = [
-                "type" => "pf_question_response",
+                "type" => $rlt_type,
                 "success" => false,
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
@@ -130,7 +130,7 @@ class InfoController extends RestController
             !isset($content['tel']) ||
             !isset($content['token'])) {
             $rlt = [
-                "type" => "pf_question_response",
+                "type" => $rlt_type,
                 "success" => false,
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
@@ -143,7 +143,7 @@ class InfoController extends RestController
         $user = $this->mongoCollection->findOne(['tel' => $content["tel"]]);
         if($user == NULL) {
             $rlt = [
-                "type" => "pf_question_response",
+                "type" => $rlt_type,
                 "success" => false,
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
@@ -156,7 +156,7 @@ class InfoController extends RestController
             $user["token"] != $content["token"]) {
 
             $rlt = [
-                "type" => "pf_question_response",
+                "type" => $rlt_type,
                 "success" => false,
                 "error_no" => 4,
                 "error_msg" => "token not valid.",
@@ -164,6 +164,8 @@ class InfoController extends RestController
             ];
             return json_encode($rlt);
         }
+
+        return json_encode($this->get_next_pf_id($content["tel"]));
         //TODO
     }
 
@@ -298,7 +300,7 @@ class InfoController extends RestController
         }
 
         $pf_ids = $this->get_all_pf_id();
-	$id_in_pf_answer = [];
+	    $id_in_pf_answer = [];
 
         foreach($pf_answer as $item) {
             if(!is_array($item) ||
@@ -317,9 +319,9 @@ class InfoController extends RestController
             }
 	   //check for repeated pf_id in pf_answer. 
 	    if(in_array($item["pf_id"], $id_in_pf_answer)) {
-		return false;
+		    return false;
 	    } else {
-		$id_in_pf_answer[] = $item["pf_id"];
+		    $id_in_pf_answer[] = $item["pf_id"];
 	    }
         }
         return true;
@@ -330,7 +332,9 @@ class InfoController extends RestController
         $cursor = $this->pfCollection->find([], ["pf_id" => true]);
         $pf_ids = [];
         foreach($cursor as $doc) {
-            $pf_ids[] = $doc["pf_id"];
+            if(!in_array($doc["pf_id"], $pf_ids)) {
+                $pf_ids[] = $doc["pf_id"];
+            }
         }
         return $pf_ids;
     }
@@ -352,4 +356,61 @@ class InfoController extends RestController
         }
         return $pf_answer_to_push;
     }
+
+
+    private function get_next_pf_id($tel)
+    {
+        $pf_ids = $this->get_all_pf_id();
+
+        $user = $this->mongoCollection->findOne(["tel" => $tel]);
+        if($user == null) {
+            return -1;
+        }
+
+        $pf_ids_sent = [];
+
+        if(isset($user["pf_sent"]) {
+            $pf_sent = $user["pf_sent"];
+
+            foreach($pf_sent as $item) {
+                if(isset($item["pf_id"]) && !in_array($item["pf_id"], $pf_ids_sent)) {
+                    $pf_ids_sent[] = $item["pf_id"];
+                }
+            }
+        }
+
+        $pf_id_available = array_diff($pf_ids, $pf_ids_sent);
+        $pf_id_available = array_values($pf_id_available);
+
+        $len = count($pf_id_available);
+
+        if($len > 0) {
+            $index = rand(0, $len -1);
+
+            return $pf_id_available[$index];
+        }
+
+        $pf_ids_answered = [];
+        if(isset($user["pf_answer"])) {
+            $pf_answer = $user["pf_answer"];
+
+            foreach($pf_answer as $item) {
+                if(isset($item["pf_id"]) && !in_array($item["pf_id"], $pf_ids_answered)) {
+                    $pf_ids_answered[] = $item["pf_id"];
+                }
+            }
+        }
+
+        $pf_id_available = array_diff($pf_ids, $pf_ids_answered);
+        $pf_id_available = array_values($pf_id_available);
+
+        $len = count($pf_id_available);
+        if($len > 0) {
+            $index = rand(0, $len - 1);
+            return $pf_id_available[$index];
+        }
+
+        return -1;
+    }
+
 }
