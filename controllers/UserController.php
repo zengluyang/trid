@@ -166,10 +166,10 @@ class UserController extends \app\controllers\RestController
 
         $token = $this->generateToken($content["tel"]);
         $user = $this->mongoCollection->findOne(['tel'=>$content["tel"]]);
-        $is_first_login = false;
+        $basic_info_required = false;
         if(!isset($user['huanxin_id'])) {
             //first time login
-            $is_first_login = true;
+            $basic_info_required = true;
             $huanxin_id = $content['tel'];
             $huanxin_pwd = $this->generateToken($content['tel'],$length=32);
             $huanxin_rlt = Yii::$app->easemobClient->accreditRegister(['username'=>$huanxin_id,'password'=>$huanxin_pwd]);
@@ -201,6 +201,9 @@ class UserController extends \app\controllers\RestController
                 return json_encode($rlt);
             }
         } else {
+            if(!isset($user["sex"]) || !isset($user["birthdate"])) {
+                $basic_info_required = true;
+            }
             $newdata = [
                 '$set'=>[
                     'token'=>$token,
@@ -231,7 +234,7 @@ class UserController extends \app\controllers\RestController
             "huanxin_pwd"=>$huanxin_pwd,
             "error_no" => 0,
             "error_msg" => null,
-            "is_first_login" => $is_first_login,
+            "basic_info_required" => $basic_info_required,
         ];
         return json_encode($rlt);
     }
