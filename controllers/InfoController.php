@@ -120,7 +120,6 @@ class InfoController extends RestController
                 "success" => false,
                 "error_no" => 1,
                 "error_msg" => "json decode failed.",
-                "question" => NULL
             ];
             return json_encode($rlt);
         }
@@ -134,7 +133,6 @@ class InfoController extends RestController
                 "success" => false,
                 "error_no" => 2,
                 "error_msg" => "input not valid.",
-                "question" => NULL
             ];
 
             return json_encode($rlt);
@@ -147,7 +145,6 @@ class InfoController extends RestController
                 "success" => false,
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
-                "question" => NULL
             ];
             return json_encode($rlt);
         }
@@ -160,13 +157,97 @@ class InfoController extends RestController
                 "success" => false,
                 "error_no" => 4,
                 "error_msg" => "token not valid.",
-                "question" => NULL
             ];
             return json_encode($rlt);
         }
 
-        return json_encode($this->get_next_pf_id($content["tel"]));
-        //TODO
+        $pf_id = $this->get_next_pf_id($content["tel"]);
+        if($pf_id == -1) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 5,
+                "error_msg" => "no available pf picture.",
+            ];
+            return json_encode($rlt);
+        }
+
+        $pf = $this->pfCollection->findOne(["pf_id" => $pf_id]);
+        if($pf == null ||
+            !isset($pf["pic0"]) ||
+            !isset($pf["pic0"]["path"]) ||
+            !isset($pf["pic0"]["name_cn"]) ||
+            !isset($pf["pic0"]["name_en"]) ||
+            !isset($pf["pic1"]) ||
+            !isset($pf["pic1"]["path"]) ||
+            !isset($pf["pic1"]["name_cn"]) ||
+            !isset($pf["pic1"]["name_en"])
+        ) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 6,
+                "error_msg" => "database error.",
+            ];
+            return json_encode($rlt);
+        }
+
+        $pic0_url = '../preference/' . $pf["pic0"]["path"];
+        $pic1_url = '../preference/' . $pf["pic1"]["path"];
+
+        $pic0_type = pathinfo($pic0_url, PATHINFO_EXTENSION);
+        $pic1_type = pathninfo($pic1_url, PATHINFO_EXTENSION);
+        $pic0_raw_data = file_get_contents($pic0_url);
+        $pic1_raw_data = file_get_contents($pic1_url);
+        if($pic0_type == "" ||
+            $pic1_type == "" ||
+            $pic0_raw_data == false || 
+            $pic1_raw_data == false) 
+        {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 7,
+                "error_msg" => "error in reading image files or unknown image type.",
+            ];
+            return json_encode($rlt);
+        }
+
+        $pic0_enc_data = base64_encode($pic0_raw_data);
+        $pic1_enc_data = base64_encode($pic1_raw_data);
+        if($pic0_enc_data == false || $pic1_enc_data == false) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 8,
+                "error_msg" => "base64 encryption error",
+            ];
+            return json_encode($rlt);
+        }
+
+        $rlt = [
+            "type" => $rlt_type,
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => "",
+            "pf" => [
+                "pf_id" => $pf_id,
+                "pic0" => [
+                    "type" => $pic0_type,
+                    "name_en" => $pf["pic0"]["name_en"],
+                    "name_cn" => $pf["pic0"]["name_cn"],
+                    "data" => $pic0_enc_data,
+                ],
+                "pic1" => [
+                    "type" => $pic1_type,
+                    "name_en" => $pf["pic1"]["name_en"],
+                    "name_cn" => $pf["pic1"]["name_cn"],
+                    "data" => $pic1_enc_data,
+                ],
+            ],
+        ];
+
+        return json_encode($rlt);
     }
 
     public function actionPfAnswerUpload()
