@@ -20,7 +20,7 @@ class InfoController extends RestController
         $this->mongoCollection = $m->selectCollection('local','user');
 
         $mongoConn = new \MongoClient();
-        $this->pfCollection = $mongoConn->selectCollection('local', 'preferences');
+        $this->pfCollection = $mongoConn->selectCollection('local', 'preference');
 
         return true;
     }
@@ -106,18 +106,179 @@ class InfoController extends RestController
         return json_encode($rlt);
     }
 
+
+    public function actionPfPictureRequest()
+    {
+        $req_type = "pf_picture_request";
+        $rlt_type = "pf_picture_result";
+
+        $input = file_get_contents("php://input");
+        $content = json_decode($input,true);
+        if(json_last_error() != JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => "pf_question_response",
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+                "question" => NULL
+            ];
+            return json_encode($rlt);
+        }
+
+        if(!isset($content['type']) ||
+            $content['type'] != $req_type ||
+            !isset($content['tel']) ||
+            !isset($content['token'])) {
+            $rlt = [
+                "type" => "pf_question_response",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+                "question" => NULL
+            ];
+
+            return json_encode($rlt);
+        }
+
+        $user = $this->mongoCollection->findOne(['tel' => $content["tel"]]);
+        if($user == NULL) {
+            $rlt = [
+                "type" => "pf_question_response",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+                "question" => NULL
+            ];
+            return json_encode($rlt);
+        }
+
+        if(!isset($user["token"]) ||
+            $user["token"] != $content["token"]) {
+
+            $rlt = [
+                "type" => "pf_question_response",
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+                "question" => NULL
+            ];
+            return json_encode($rlt);
+        }
+        //TODO
+    }
+
+    public function actionPfAnswerUpload()
+    {
+        $req_type = "pf_answer_upload";
+        $rlt_type = "pf_answer_upload_result";
+
+        $input = file_get_contents("php://input");
+        $content = json_decode($input,true);
+        if(json_last_error() != JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(!isset($content["type"]) ||
+            $content["type"] != $req_type ||
+            !isset($content["tel"]) ||
+            !isset($content["token"]) ||
+            !isset($countet["count"]) ||
+            !isset($content["pf_answer"]) ||
+            !$this->check_pf_answer($content["count"], $content["pf_answer"])
+        ) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+
+            return json_encode($rlt);
+        }
+
+        $user = $this->mongoCollection->findOne(["tel" => $content["tel"]]);
+         if($user == NULL) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(!isset($user["token"]) ||
+            $user["token"] != $content["token"]) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+        $pf_answer = $content["pf_answer"];
+        $pf_answer_in_db = [];
+        if(isset($user["pf_answer"])) {
+            $pf_answer_in_db = $user["pf_answer"];
+        }
+
+        $pf_answer_to_push = $this->find_pf_answer_to_push($pf_answer, $pf_answer_in_db);
+        //db update for operator set
+        foreach($pf_answer as $item) {
+            if(!in_array($item, $pf_answer_to_push)) {
+                $criteria = ["tel" => $content["tel"], 'pf_answer.pf_id' => $item["pf_id"]];
+                $newdata = ['$set' => ['pf_answer.$.choice' => $item["choice"]]];
+                if(!$this->pfCollection->update($criteria, $newdata)) {
+                    $rlt = [
+                        "type" => $rlt_type,
+                        "success" => false,
+                        "error_no" => 5,
+                        "error_msg" => "database error",
+                    ];
+                    return json_encode($rlt);
+                }
+            }
+        }
+
+        //db update for operator pushAll
+        if(count($pf_answer_to_push) > 0) {
+            $newdata = ['$pushAll' => ["pf_answer" => $pf_answer_to_push]];
+            if(!$this->mongoCollection->update([ "tel" => $content["tel"]], $newdata)) {
+                $rlt = [
+                    "type" => $rlt_type,
+                    "success" => false,
+                    "error_no" => 5,
+                    "error_msg" => "database error",
+                ];
+                return json_encode($rlt);
+            }
+        }
+
+        $rlt = [
+            "type" => $rlt_type,
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => "",
+            ];
+        return json_encode($rlt);
+    }
+
     private function check_sex($sex)
     {
-        if(!isset($sex)) {
-            return false;
-        }
-	
-	return $sex == 0 || $sex == 1;
+	   return $sex == 0 || $sex == 1;
     }
 
     private function check_birthdate($birthdate) 
     {
-        if(!isset($birthdate) || 
+        if(!is_array($birthdate) || 
             !isset($birthdate["month"]) ||
             !isset($birthdate["day"]) ||
             !isset($birthdate["year"])
@@ -126,5 +287,62 @@ class InfoController extends RestController
         }
 
         return checkdate($birthdate["month"], $birthdate["day"], $birthdate["year"]);
-    }    
+    }
+
+    private function check_pf_answer($count, $pf_answer)
+    {
+        if(!is_array($pf_answer) ||
+            $count != count($pf_answer)
+        ) {
+            return false;
+        }
+
+        $pf_ids = $this->get_all_pf_id();
+
+        foreach($pf_answer as $item) {
+            if(!is_array($item) ||
+                !isset($item["pf_id"]) ||
+                !isset($item["choice"])
+            ) {
+                return false;
+            }
+
+            if($item["choice"] != 0 && $item["choice" != 1]) {
+                return false;
+            } 
+
+            if(!in_array($item["pf_id"], $pf_ids) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function get_all_pf_id()
+    {
+        $cursor = $this->pfCollection->find([], ["pf_id" => true]);
+        $pf_ids = [];
+        foreach($cursor as $doc) {
+            $pf_ids[] = $doc["pf_id"];
+        }
+        return pf_ids;
+    }
+
+    private function find_pf_answer_to_push($pf_answer, $pf_answer_in_db) {
+        $pf_answer_to_push = [];
+        foreach($pf_answer as $item1) {
+            $tag = false;
+            foreach($pf_answer_in_db as $item2) {
+                if($item2["pf_id"] == $item1["pf_id"]) {
+                    $tag = true;
+                    break;
+                }
+            }
+
+            if(!tag) {
+                $pf_answer_to_push[] = $item1;
+            }
+        }
+        return $pf_answer_to_push;
+    }
 }
