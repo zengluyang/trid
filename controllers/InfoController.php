@@ -248,6 +248,9 @@ class InfoController extends RestController
             ],
         ];
 
+        $newdata = ['$addToSet'=>["pf_sent" => ["pf_id" => $pf_id]]];
+        $this->mongoCollection->update(["tel" => $content["tel"]], $newdata);
+
         return json_encode($rlt);
     }
 
