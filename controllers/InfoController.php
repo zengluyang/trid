@@ -195,15 +195,14 @@ class InfoController extends RestController
 
         $pic0_url = '../preference/' . $pf["pic0"]["path"];
         $pic1_url = '../preference/' . $pf["pic1"]["path"];
-
         $pic0_type = pathinfo($pic0_url, PATHINFO_EXTENSION);
         $pic1_type = pathinfo($pic1_url, PATHINFO_EXTENSION);
         $pic0_raw_data = file_get_contents($pic0_url);
         $pic1_raw_data = file_get_contents($pic1_url);
         if($pic0_type == "" ||
             $pic1_type == "" ||
-            $pic0_raw_data == false || 
-            $pic1_raw_data == false) 
+            $pic0_raw_data === false || 
+            $pic1_raw_data === false) 
         {
             $rlt = [
                 "type" => $rlt_type,
