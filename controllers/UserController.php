@@ -305,7 +305,7 @@ class UserController extends \app\controllers\RestController
                 "username"=> isset($user["username"]) ? isset($user["username"]) : null,
                 "huanxin_id"=>$user["huanxin_id"],
                 "huanxin_password "=> $user["huanxin_password"],
-                "pf_answers" => isset($user["pf_answers"]) ? $user["pf_answers"] : null,
+                "pf_answer" => isset($user["pf_answer"]) ? $user["pf_answer"] : null,
             ],
         ];
         return json_encode($rlt);
