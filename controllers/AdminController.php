@@ -36,6 +36,15 @@ class AdminController extends \app\controllers\RestController
 
     }
 
+    public function actionPreference() {
+        $m = new \MongoClient();
+        $preferenceCollection = $m->selectCollection('local','preference');
+        $cursor = $preferenceCollection->find();
+        $preferences = iterator_to_array($cursor,false);
+        return json_encode($preferences,JSON_PRETTY_PRINT);
+
+    }
+
     public function actionUpdate()
     {
 
