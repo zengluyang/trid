@@ -703,7 +703,7 @@ class ContactController extends \app\controllers\RestController
 
         if($this->find_friend($content["tel"], $content["peer_tel"]) != null) {
             $rlt = [
-                "type" => "rlt_type",
+                "type" => $rlt_type,
                 "success" => false,
                 "error_no" => 7,
                 "error_msg" => "peer user is already in the friend list.",
