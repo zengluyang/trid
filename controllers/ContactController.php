@@ -313,12 +313,11 @@ class ContactController extends \app\controllers\RestController
             return json_encode($rlt);
         }
 
-        $invitation_send_list = $user["invitation_send_list"];
-        if($invitation_send_list == null) {
-        	$count = 0;
-        } else {
-        	$count = count($invitation_send_list);
+        $invitation_send_list = [];
+        if(isset($user["invitation_send_list"])) {
+            $invitation_send_list = $user["invitation_send_list"];
         }
+        $count = count($invitation_send_list);
 
         $rlt = [
         	"type" => $rlt_type,
@@ -602,13 +601,11 @@ class ContactController extends \app\controllers\RestController
             return json_encode($rlt);
         }
 
-        $invitation_recv_list = $user["invitation_recv_list"];
-
-        if($invitation_recv_list == null) {
-        	$count = 0;
-        } else {
-        	$count = count($invitation_recv_list);
+        $invitation_recv_list = [];
+        if(isset($user["invitation_recv_list"])) {
+            $invitation_recv_list = $user["invitation_recv_list"];
         }
+        $count = count($invitation_recv_list);
 
         $rlt = [
         	"type" => $rlt_type,
@@ -901,12 +898,13 @@ class ContactController extends \app\controllers\RestController
             return json_encode($rlt);
         }
 
-        $friend_list = $user["friend_list"];
-        if($friend_list == null) {
-        	$count = 0;
-        } else {
-        	$count = count($friend_list);
+
+        $friend_list = [];
+        if(isset($user["friend_list"])) {
+            $friend_list = $user["friend_list"];
         }
+
+        $count = count($friend_list);
 
         $rlt = [
         	"type" => $rlt_type,
