@@ -217,12 +217,10 @@ class EasemobClient extends Component {
 	 * @param array $ext
 	 *        	自定义参数
 	 */
-	function yy_hxSend($from_user = "admin", $username, $content, $target_type = "users", $ext) {
+	function yy_hxSend($from_user = "admin", $target, $msg, $target_type = "users", $ext) {
 		$option ['target_type'] = $target_type;
-		$option ['target'] = $username;
-		$params ['type'] = "txt";
-		$params ['msg'] = $content;
-		$option ['msg'] = $params;
+		$option ['target'] = $target;
+		$option ['msg'] = $msg;
 		$option ['from'] = $from_user;
 		$option ['ext'] = $ext;
 		$url = $this->url . "messages";
@@ -231,6 +229,7 @@ class EasemobClient extends Component {
 		$result = $this->postCurl ( $url, $option, $header );
 		return json_decode($result,true);
 	}
+
 	/**
 	 * 获取app中所有的群组
 	 */
