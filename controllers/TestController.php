@@ -55,7 +55,7 @@ class TestController extends \app\controllers\RestController
         }
 
         if(!isset($content["type"]) ||
-            $content["type"] != $req_type;
+            $content["type"] != $req_type ||
             !isset($content["huanxin_id"])) {
             $rlt = [
                 "type" => $rlt_type,
