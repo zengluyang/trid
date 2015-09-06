@@ -17,7 +17,7 @@ class RestController extends \yii\web\Controller
             return false;
         }
 
-        \Yii::$app->response->format = yii\web\Response::FORMAT_RAW;
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
 
         $m = new \MongoClient();
         $this->logCollection = $m->selectCollection('local','log');

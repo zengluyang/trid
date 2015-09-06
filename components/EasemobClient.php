@@ -347,7 +347,7 @@ class EasemobClient extends Component {
 	 *        	默认20
 	 */
 	public function chatRecord($ql = '', $cursor = '', $limit = 20) {
-		$ql = ! empty ( $ql ) ? "ql=" . $ql : "order+by+timestamp+desc";
+		$ql = ! empty ( $ql ) ? "ql=" . $ql : "" ;
 		$cursor = ! empty ( $cursor ) ? "&cursor=" . $cursor : '';
 		$url = $this->url . "chatmessages?" . $ql . "&limit=" . $limit . $cursor;
 		$access_token = $this->getToken ();
