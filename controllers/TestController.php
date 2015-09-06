@@ -42,7 +42,7 @@ class TestController extends \app\controllers\RestController
         $rlt_type = "cmd_msg_send_result";
 
         $input = file_get_contents("php://input");
-        $content = json_decode($input);
+        $content = json_decode($input, true);
 
         if(json_last_error() != JSON_ERROR_NONE) {
             $rlt = [
@@ -65,7 +65,7 @@ class TestController extends \app\controllers\RestController
             ];
             return json_encode($rlt);
         }
-
+	
         $target_type = "users";
         $target[] = $content["huanxin_id"];
         $from = "admin";
