@@ -1439,6 +1439,7 @@ connection.prototype.handleIq = function(e) {
     return true;
 };
 connection.prototype.handleMessage = function(msginfo){
+    console.log("handleMessage:+" msginfo);
     if(this.isClosed()){
         return;
     }
