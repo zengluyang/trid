@@ -289,6 +289,9 @@
             onError : function(message) {
                 handleError(message);
             }
+            onCmdMessage : function(message) {
+                console.log(message);
+            }
         });
         var loginInfo = getLoginInfo();
         if (loginInfo.isLogin) {
