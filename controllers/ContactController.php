@@ -1038,7 +1038,7 @@ class ContactController extends \app\controllers\RestController
         $target_type = "users";
         $msg = [
             "type" => "cmd",
-            "action" => "new_friend_notify",
+            "action" => "new_friend_notification",
         ];
         $ext = [
             "friend" => $friend,
