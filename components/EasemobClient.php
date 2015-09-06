@@ -217,11 +217,11 @@ class EasemobClient extends Component {
 	 * @param array $ext
 	 *        	自定义参数
 	 */
-	function yy_hxSend($from_user = "admin", $target, $msg, $target_type = "users", $ext) {
+	public function yy_hxSend($from, $target, $msg, $target_type, $ext) {
 		$option ['target_type'] = $target_type;
 		$option ['target'] = $target;
 		$option ['msg'] = $msg;
-		$option ['from'] = $from_user;
+		$option ['from'] = $from;
 		$option ['ext'] = $ext;
 		$url = $this->url . "messages";
 		$access_token = $this->getToken ();

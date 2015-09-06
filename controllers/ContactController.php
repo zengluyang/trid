@@ -1,6 +1,8 @@
 <?php
 namespace app\controllers;
 
+use Yii;
+
 class ContactController extends \app\controllers\RestController
 {
     private $mongoCollection = null;
@@ -755,6 +757,7 @@ class ContactController extends \app\controllers\RestController
         $friend["huanxin_id"] = $peer_user["huanxin_id"];
 		//暗恋
         $friend["type"] = 0;
+	//update user's friend_list
         $newdata = ['$push' => ["friend_list" => $friend]];
         $this->mongoCollection->update(["tel" => $content["tel"]], $newdata);
        
