@@ -23,4 +23,52 @@ class TestController extends \app\controllers\RestController
     	];
     	return json_encode($rlt);
     }
+
+    public function actionCmdMsgSend() {
+        $req_type = "cmd_msg_send_request";
+        $rlt_type = "cmd_msg_send_result";
+
+        $input = file_get_contents("php://input");
+        $content = json_decode($input);
+
+        if(json_last_error() != JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(!isset($content["peer_huanxin_id"])) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" =>"invalid input",
+            ];
+            return json_encode($rlt);
+        }
+
+        $target_type = "users";
+        $target[] = $content["peer_huanxin_id"];
+        $from = "admin";
+        $msg = [
+            "type" => "cmd",
+            "action" => "test",
+        ];
+
+        $result = Yii::$app->easemobClient->yy_hxSend($from, $target, $msg, $target_type);
+
+        $rlt = [
+            "type" => $rlt_type,
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => "",
+            "result" => $result,
+        ];
+
+        return json_encode($rlt);
+    }
 }
