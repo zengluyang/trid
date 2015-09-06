@@ -735,9 +735,21 @@ class ContactController extends \app\controllers\RestController
             "chat_title" => $chat_title,
             "expire" => $expire,
         ];
+
+        //send new_friend_notity to peer user.
+        if(!$this->new_friend_notify($content["peer_tel"], $friend, $word)) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 9,
+                "error_msg" => "fail to notify peer user.",
+            ];
+            return json_encode($rlt);
+        }
+        
+        //update peer user's friend_list
         $newdata = ['$push' => ["friend_list" => $friend]];
         $this->mongoCollection->update(["tel" => $content["peer_tel"]], $newdata);
-        $this->add_friend_notify($content["peer_tel"], $friend, $word);
         
         $friend["peer_tel"] = $content["peer_tel"];
         $friend["huanxin_id"] = $peer_user["huanxin_id"];
@@ -1010,5 +1022,35 @@ class ContactController extends \app\controllers\RestController
 
     private function delete_friend_notify($tel, $friend) {
     	return;
+    }
+
+    private function new_friend_notify($tel, $friend, $word) {
+        $user = $this->mongoCollection->findOne(["tel" => $tel]);
+        if($user == null || !isset($user["huanxin_id"])) {
+            return false;
+        }
+
+        $from = "admin";
+        $target[] = $user["huanxin_id"]; 
+        $target_type = "users";
+        $msg = [
+            "type" => "cmd",
+            "action" => "new_friend_notify",
+        ];
+        $ext = [
+            "friend" => $friend,
+            "word" => $word,
+        ];
+
+        $result = Yii::$app->easemobClient->yy_hxSend($from, $target, $msg, $target_type, $ext);
+
+        if(!isset($result) ||
+            empty($result) ||
+            ( isset($result['error']) && !empty($result['error']) )
+        ) {
+            return false;
+        }
+
+        return true;
     }    
 }
