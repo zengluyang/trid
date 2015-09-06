@@ -8,6 +8,7 @@ class TestController extends \app\controllers\RestController
 {
 
     public function actionIndex() {
+        new \MongoID("123");
         $rlt = [
             'data'=>Yii::$app->yuntongxunSmsClient->sendTemplateSMS("13800000000" ,array('6532','5'),"1"),
         ];
