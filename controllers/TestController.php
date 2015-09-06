@@ -54,7 +54,9 @@ class TestController extends \app\controllers\RestController
             return json_encode($rlt);
         }
 
-        if(!isset($content["peer_huanxin_id"])) {
+        if(!isset($content["type"]) ||
+            $content["type"] != $req_type;
+            !isset($content["huanxin_id"])) {
             $rlt = [
                 "type" => $rlt_type,
                 "success" => false,
@@ -65,7 +67,7 @@ class TestController extends \app\controllers\RestController
         }
 
         $target_type = "users";
-        $target[] = $content["peer_huanxin_id"];
+        $target[] = $content["huanxin_id"];
         $from = "admin";
         $msg = [
             "type" => "cmd",
