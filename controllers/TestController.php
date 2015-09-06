@@ -7,10 +7,22 @@ use Yii;
 class TestController extends \app\controllers\RestController
 {
 
+    private $mongoCollection=null;
+
     public function actionIndex() {
-        new \MongoID("123");
+
+        $m = new \MongoClient();
+        $this->mongoCollection = $m->selectCollection('local','chatrecord'); 
+        //db.chatrecord.find( { $or: [{from:"admin",to:"18615794931"},{from:"18615794931",to:"admin"}]}).sort([{timestamp:1}])
+        $q = [
+            '$or' => [
+                ['from'=>'admin','to'=>'18615794931'],
+                ['from'=>'18615794931','to'=>'admin'],
+
+            ],
+        ];
         $rlt = [
-            'data'=>Yii::$app->yuntongxunSmsClient->sendTemplateSMS("13800000000" ,array('6532','5'),"1"),
+            'data'=>iterator_to_array($this->mongoCollection->find($q)->sort(['timestamp'=>1])),
         ];
         return json_encode($rlt,JSON_PRETTY_PRINT);
     }
