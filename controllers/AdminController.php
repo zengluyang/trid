@@ -45,6 +45,42 @@ class AdminController extends \app\controllers\RestController
 
     }
 
+    public function actionDeleteAllFriend() {
+
+        $tel = isset($_GET['tel'])? $_GET['tel'] : "";
+        $m = new \MongoClient();
+        $userCollection = $m->selectCollection('local','user');
+
+        $user = $userCollection->findOne(["tel" => $tel]);
+
+        if($user == null ||
+            !isset($user["friend_list"])) {
+            $rlt = [
+                "success" => false
+            ];
+            return json_encode($rlt);
+        }
+
+        $friend_list = $user["friend_lsit"];
+
+        foreach($friend as $item) {
+            $peer_tel = $item["peer_tel"];
+            $newdata1 = ['$pull' => ["friend_list" => ["peer_tel" => $peer_tel]]];
+            $newdata2 = ['$pull' => ["friend_list" => ["peer_tel" => $tel]]];
+            $userCollection->update(["tel" => $tel], $newdata1);
+            $userCollection->update(["tel" => $peer_tel], $newdata2);
+        }
+
+        $rlt = [
+            "success"=>true,
+            "count"=>count($friend_list);
+            "friend_list" => $friend_list;
+        ];
+
+        return json_encode($rlt);
+
+    }
+
     public function actionUpdate()
     {
 
