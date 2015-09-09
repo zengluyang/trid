@@ -61,9 +61,9 @@ class AdminController extends \app\controllers\RestController
             return json_encode($rlt);
         }
 
-        $friend_list = $user["friend_lsit"];
+        $friend_list = $user["friend_list"];
 
-        foreach($friend as $item) {
+        foreach($friend_list as $item) {
             $peer_tel = $item["peer_tel"];
             $newdata1 = ['$pull' => ["friend_list" => ["peer_tel" => $peer_tel]]];
             $newdata2 = ['$pull' => ["friend_list" => ["peer_tel" => $tel]]];
@@ -73,8 +73,8 @@ class AdminController extends \app\controllers\RestController
 
         $rlt = [
             "success"=>true,
-            "count"=>count($friend_list);
-            "friend_list" => $friend_list;
+            "count"=>count($friend_list),
+            "friend_list" => $friend_list,
         ];
 
         return json_encode($rlt);
