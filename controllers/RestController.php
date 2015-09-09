@@ -32,6 +32,7 @@ class RestController extends \yii\web\Controller
             $body = \Yii::$app->request->rawBody;
             $new_data = [
                 "request"=>[
+                    "route"=>isset(\Yii::$app->request->resolve()[0])?\Yii::$app->request->resolve()[0]:"",
                     "body"=>strlen($body)<200 ? $body : substr($body,0,200),
                     "Content-Type"=>\Yii::$app->request->headers->get('Content-Type'),
                     "User-Agent"=>\Yii::$app->request->headers->get('User-Agent'),

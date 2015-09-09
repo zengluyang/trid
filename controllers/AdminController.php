@@ -78,6 +78,14 @@ class AdminController extends \app\controllers\RestController
         ];
 
         return json_encode($rlt);
+    }
+    
+    public function actionChatRecord() {
+        $m = new \MongoClient();
+        $chatRecordCollection = $m->selectCollection('local','chatrecord');
+        $cursor = $chatRecordCollection->find()->sort(['timestamp'=>-1]);
+        $chatRecords = iterator_to_array($cursor,false);
+        return json_encode($chatRecords,JSON_PRETTY_PRINT);
 
     }
 
