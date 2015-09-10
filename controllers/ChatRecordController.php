@@ -33,7 +33,7 @@ class ChatRecordController extends \app\controllers\RestController
             'count' => count($this->chatRecords),
             'chatRecords' => $this->chatRecords,
         ];
-        return json_encode($rlt);
+        return json_encode($rlt,JSON_PRETTY_PRINT);
     }
 
     private function getChatAndStore($cursor,$limit=1000) {
