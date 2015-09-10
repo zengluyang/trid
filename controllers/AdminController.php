@@ -20,7 +20,7 @@ class AdminController extends \app\controllers\RestController
 
     public function actionUser() {
         $m = new \MongoClient();
-        $userCollection = $m->selectCollection('local','user');
+        $userCollection = $m->selectCollection($this->mongoDbName,'user');
         $cursor = $userCollection->find()->sort(['sms_validation_request_timestamp'=>-1]);
         $users = iterator_to_array($cursor,false);
         return json_encode($users,JSON_PRETTY_PRINT);
@@ -29,7 +29,7 @@ class AdminController extends \app\controllers\RestController
 
     public function actionPicture() {
         $m = new \MongoClient();
-        $userCollection = $m->selectCollection('local','picture');
+        $userCollection = $m->selectCollection($this->mongoDbName,'picture');
         $cursor = $userCollection->find()->sort(['createtime'=>-1]);
         $users = iterator_to_array($cursor,false);
         return json_encode($users,JSON_PRETTY_PRINT);
@@ -38,7 +38,7 @@ class AdminController extends \app\controllers\RestController
 
     public function actionPreference() {
         $m = new \MongoClient();
-        $preferenceCollection = $m->selectCollection('local','preference');
+        $preferenceCollection = $m->selectCollection($this->mongoDbName,'preference');
         $cursor = $preferenceCollection->find();
         $preferences = iterator_to_array($cursor,false);
         return json_encode($preferences,JSON_PRETTY_PRINT);
@@ -49,7 +49,7 @@ class AdminController extends \app\controllers\RestController
 
         $tel = isset($_GET['tel'])? $_GET['tel'] : "";
         $m = new \MongoClient();
-        $userCollection = $m->selectCollection('local','user');
+        $userCollection = $m->selectCollection($this->mongoDbName,'user');
 
         $user = $userCollection->findOne(["tel" => $tel]);
 
@@ -82,7 +82,7 @@ class AdminController extends \app\controllers\RestController
     
     public function actionChatRecord() {
         $m = new \MongoClient();
-        $chatRecordCollection = $m->selectCollection('local','chatrecord');
+        $chatRecordCollection = $m->selectCollection($this->mongoDbName,'chatrecord');
         $cursor = $chatRecordCollection->find()->sort(['timestamp'=>-1]);
         $chatRecords = iterator_to_array($cursor,false);
         return json_encode($chatRecords,JSON_PRETTY_PRINT);

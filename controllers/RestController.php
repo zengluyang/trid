@@ -10,17 +10,18 @@ class RestController extends \yii\web\Controller
 	protected $logCollection = null;
 
     protected $logRequestAndResponse = true;
+    protected $mongoDbName = null;
 
     public function beforeAction($action)
     {
         if (!parent::beforeAction($action)) {
             return false;
         }
-
+        $this->mongoDbName = \Yii::$app->params['mongoDbName'];
         \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
 
         $m = new \MongoClient();
-        $this->logCollection = $m->selectCollection('local','log');
+        $this->logCollection = $m->selectCollection($this->mongoDbName,'log');
         $this->header();
         return true;
     }

@@ -16,7 +16,7 @@ class UserController extends \app\controllers\RestController
         }
 
         $m = new \MongoClient();
-        $this->mongoCollection = $m->selectCollection('local','user');       
+        $this->mongoCollection = $m->selectCollection($this->mongoDbName,'user');       
         return true;
     }
 
