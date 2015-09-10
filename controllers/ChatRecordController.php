@@ -31,6 +31,7 @@ class ChatRecordController extends \app\controllers\RestController
         $rlt = [
             'success' => true,
             'count' => count($this->chatRecords),
+            'chatRecords' => $this->chatRecords,
         ];
         return json_encode($rlt);
     }
