@@ -17,10 +17,10 @@ class InfoController extends RestController
         }
 
         $m = new \MongoClient();
-        $this->mongoCollection = $m->selectCollection('local','user');
+        $this->mongoCollection = $m->selectCollection($this->mongoDbName,'user');
 
         $mongoConn = new \MongoClient();
-        $this->pfCollection = $mongoConn->selectCollection('local', 'preference');
+        $this->pfCollection = $mongoConn->selectCollection($this->mongoDbName, 'preference');
 
         return true;
     }

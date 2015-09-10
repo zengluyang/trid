@@ -16,7 +16,7 @@ class ChatRecordController extends \app\controllers\RestController
         }
 
         $m = new \MongoClient();
-        $this->mongoCollection = $m->selectCollection('local','chatrecord');       
+        $this->mongoCollection = $m->selectCollection($this->mongoDbName,'chatrecord');       
         return true;
     }
 

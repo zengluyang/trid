@@ -12,7 +12,7 @@ class TestController extends \app\controllers\RestController
     public function actionIndex() {
 
         $m = new \MongoClient();
-        $this->mongoCollection = $m->selectCollection('local','chatrecord'); 
+        $this->mongoCollection = $m->selectCollection($this->mongoDbName,'chatrecord'); 
         //db.chatrecord.find( { $or: [{from:"admin",to:"18615794931"},{from:"18615794931",to:"admin"}]}).sort([{timestamp:1}])
         $q = [
             '$or' => [

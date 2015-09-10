@@ -30,8 +30,8 @@ class PictureController extends \app\controllers\RestController {
         }
 
         $m = new \MongoClient();
-        $this->pictureCollection = $m->selectCollection('local','picture');
-        $this->userColleciton = $m->selectCollection('local','user');       
+        $this->pictureCollection = $m->selectCollection($this->mongoDbName,'picture');
+        $this->userColleciton = $m->selectCollection($this->mongoDbName,'user');       
         return true;
     }
 
