@@ -124,7 +124,7 @@ class ChatRecordController extends \app\controllers\RestController
         }
 
         try {
-            $cursor = $this->chatRecordCollection->find($q)->sort(['timestamp'=>-1])->skip($offset)->limit($limit);
+            $cursor = $this->chatRecordCollection->find($q)->sort(['timestamp'=>1])->skip($offset)->limit($limit);
             $chat_records = iterator_to_array($cursor,false);  
         } catch (Exception $e) {
             $rlt = [
