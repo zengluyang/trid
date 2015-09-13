@@ -7,7 +7,8 @@ use Yii;
 
 class ChatRecordController extends \app\controllers\RestController
 {
-    private $mongoCollection = null;
+    private $chatRecordCollection = null;
+    private $userCollection = null;
     private $chatRecords = [];
     public function beforeAction($action)
     {
@@ -16,7 +17,8 @@ class ChatRecordController extends \app\controllers\RestController
         }
 
         $m = new \MongoClient();
-        $this->mongoCollection = $m->selectCollection($this->mongoDbName,'chatrecord');       
+        $this->chatRecordCollection = $m->selectCollection($this->mongoDbName,'chatrecord');
+        $this->userCollection = $m->selectCollection($this->mongoDbName,'user');
         return true;
     }
 
@@ -24,10 +26,102 @@ class ChatRecordController extends \app\controllers\RestController
     {
     }
 
-    public function actionSync() {
-        for($cursor = $this->getChatAndStore('');$cursor!=null;$cursor = $this->getChatAndStore($cursor)) {
-            //do nothing
+    public function actionGetChatRecord() {
+        $req_type = "get_chat_record";
+        $rlt_type = "get_chat_record_result";
+
+        $input = file_get_contents("php://input");
+        $content = json_decode($input,true);
+        if(json_last_error() != JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            return json_encode($rlt);
         }
+
+        if( 
+            !isset($content["type"]) ||
+            $content["type"] != $req_type ||
+            !isset($content["tel"]) ||
+            !isset($content["token"])
+        ) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+        $user = $this->userCollection->findOne(['tel'=>$content["tel"]]);
+        if($user==null) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(
+            !isset($user["token"]) ||
+            $user["token"]!=$content["token"]
+        ) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(!isset($user["friend_list"])) {
+            $rlt = [
+                "type" => $rlt_type,
+                "success" => true,
+                "error_no" => 0,
+                "error_msg" => "",
+                "chat_records" => null,
+            ];
+            return json_encode($rlt);
+        }
+
+        foreach ($user["friend_list"] as $f) {
+            # code...
+            $self_huanxin_id = $user['huanxin_id'];
+            $peer_huanxin_id = $f['huanxin_id'];
+            $q = [
+                '$or' => [
+                    ['from'=>$self_huanxin_id,'to'=>$peer_huanxin_id],
+                    ['from'=>$peer_huanxin_id,'to'=>$self_huanxin_id],
+
+                ],
+            ];
+
+            $chat_records = iterator_to_array($this->chatRecordCollection->find($q),false);
+            $f['chat_records'] = $chat_records;
+            
+        }
+
+        $rlt = [
+            "type" => $rlt_type,
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => "",
+            'chat_records'=>$user["friend_list"],
+        ];
+
+        return json_encode($rlt);
+    }
+
+    public function actionSync() {
+        $this->sync();
         $rlt = [
             'success' => true,
             'count' => count($this->chatRecords),
@@ -36,8 +130,14 @@ class ChatRecordController extends \app\controllers\RestController
         return json_encode($rlt,JSON_PRETTY_PRINT);
     }
 
+    private function sync() {
+        for($cursor = $this->getChatAndStore('');$cursor!=null;$cursor = $this->getChatAndStore($cursor)) {
+            //do nothing
+        }
+    }
+
     private function getChatAndStore($cursor,$limit=1000) {
-        $latestRecord = $this->mongoCollection->find()->sort(['timestamp'=>-1])->limit(1)->getNext();
+        $latestRecord = $this->chatRecordCollection->find()->sort(['timestamp'=>-1])->limit(1)->getNext();
         if($latestRecord!=null) {
             $timestamp = $latestRecord['timestamp'];
             $ql = "select+*+where+timestamp>$timestamp+order+by+timestamp+asc";
@@ -56,7 +156,7 @@ class ChatRecordController extends \app\controllers\RestController
         $entities = $huanxin_rlt['entities'];
         foreach ($entities as $e) {
             $this->chatRecords[] = $e;
-            $this->mongoCollection->update(["uuid"=>$e['uuid']],$e,["upsert"=>true]);
+            $this->chatRecordCollection->update(["uuid"=>$e['uuid']],$e,["upsert"=>true]);
         }
         return isset($huanxin_rlt['cursor']) ? $huanxin_rlt['cursor'] : null;
     }
