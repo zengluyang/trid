@@ -92,7 +92,7 @@ class ChatRecordController extends \app\controllers\RestController
             return json_encode($rlt);
         }
 
-        foreach ($user["friend_list"] as $f) {
+        foreach ($user["friend_list"] as &$f) {
             # code...
             $self_huanxin_id = $user['huanxin_id'];
             $peer_huanxin_id = $f['huanxin_id'];
