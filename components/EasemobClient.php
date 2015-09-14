@@ -369,8 +369,8 @@ class EasemobClient extends Component {
 		if($config!=null) {
 			if(isset($config['expires_in']) && ($config['expires_in'])<time() ) {
 				$result = $this->postCurl ( $url, $option);
+				$result = json_decode($result,true);
 				$result ['expires_in'] = $result ['expires_in'] + time ();
-				$result = json_decode($result);
 				//$new_data = ['access_token'=>$result ['access_token'],'expires_in'=>['expires_in']];
 				$new_data = ['$set'=>['access_token'=>$result['access_token'], 'expires_in'=>$result['expires_in']]];
 				$this->dbConfigCollection->update(['url'=>$this->url],$new_data);
@@ -386,6 +386,20 @@ class EasemobClient extends Component {
 			$this->dbConfigCollection->insert($new_data);
 			return $result ['access_token'];
 		}
+	}
+
+	public function refreshToken() {
+		$option ['grant_type'] = "client_credentials";
+		$option ['client_id'] = $this->client_id;
+		$option ['client_secret'] = $this->client_secret;
+		$url = $this->url . "token";
+		$result = $this->postCurl ( $url, $option);
+		$result = json_decode($result,true);
+		$result ['expires_in'] = $result ['expires_in'] + time ();
+		//$new_data = ['access_token'=>$result ['access_token'],'expires_in'=>['expires_in']];
+		$new_data = ['$set'=>['access_token'=>$result['access_token'], 'expires_in'=>$result['expires_in']]];
+		$this->dbConfigCollection->update(['url'=>$this->url],$new_data);
+		return $result ['access_token'];
 	}
 	
 	/**
@@ -411,6 +425,13 @@ class EasemobClient extends Component {
 		//$res ['status'] = curl_getinfo ( $curl, CURLINFO_HTTP_CODE );
 		//pre ( $res );
 		curl_close ( $curl ); // 关闭CURL会话
+		if($result==null) {
+			return json_encode(['error'=>'network error.']);
+		}
+		$rlt_j = json_decode($result,true);
+		if(isset($rlt_j['error']) && $rlt_j['error']=='auth_invalid') {
+			$this->refreshToken();
+		}
 		//var_dump($result);
 		return $result;
 	}
