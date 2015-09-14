@@ -382,7 +382,7 @@ class UserController extends \app\controllers\RestController
             "success" => true,
             "error_no" => 0,
             "error_msg" => null,
-            "picture" => $user,
+            "user" => $user,
         ];
         return  json_encode($rlt);
     }
