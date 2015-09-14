@@ -356,7 +356,7 @@ class UserController extends \app\controllers\RestController
 
         if($user==null) {
             $rlt = [
-                "type" => "picture_comment_response",
+                "type" => "set_username_response",
                 "success" => false,
                 "error_no" => 3,
                 "error_msg" => "tel not found.",
@@ -366,7 +366,7 @@ class UserController extends \app\controllers\RestController
 
         if(!isset($user["token"])||$token!=$user["token"]) {
             $rlt = [
-                "type" => "picture_comment_response",
+                "type" => "set_username_response",
                 "success" => false,
                 "error_no" => 4,
                 "error_msg" => "token not valid.",
@@ -374,11 +374,11 @@ class UserController extends \app\controllers\RestController
             return json_encode($rlt);
         }
 
-        $newdata = array( '$set' => array('username' => "$username"));
-        $this->userCollection->update(array("tel" => $tel), $newdata);
+        //$newdata = array( '$set' => array('username' => "$username"));
+        //$this->userCollection->update(array("tel" => $tel), $newdata);
         $user = $this->userCollection->findOne(array("tel" => $tel));
         $rlt = [
-            "type" => "picture_comment_response",
+            "type" => "set_username_response",
             "success" => true,
             "error_no" => 0,
             "error_msg" => null,
