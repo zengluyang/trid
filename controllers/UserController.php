@@ -314,6 +314,79 @@ class UserController extends \app\controllers\RestController
     }
 
 
+    /*
+   * set or modify nick
+   * */
+    public function actionSetNick(){
+        $content = file_get_contents('php://input');
+        $json_data = json_decode($content, true);
+
+        if(json_last_error()!=JSON_ERROR_NONE) {
+            $rlt = [
+                "type" => "set_username_response",
+                "success" => false,
+                "error_no" => 1,
+                "error_msg" => "json decode failed.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(
+            !isset($json_data['type']) ||
+            $json_data['type']!="set_username_request" ||
+            !isset($json_data['token']) ||
+            !isset($json_data['tel']) ||
+            !isset($json_data['username'])
+        ) {
+            $rlt = [
+                "type" => "set_username_response",
+                "success" => false,
+                "error_no" => 2,
+                "error_msg" => "input not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+
+        $token = $json_data['token'];
+        $tel = $json_data['tel'];
+        $username =  $json_data['username'];
+
+        $user = $this->userColleciton->findOne(['tel'=>$tel]);
+
+        if($user==null) {
+            $rlt = [
+                "type" => "picture_comment_response",
+                "success" => false,
+                "error_no" => 3,
+                "error_msg" => "tel not found.",
+            ];
+            return json_encode($rlt);
+        }
+
+        if(!isset($user["token"])||$token!=$user["token"]) {
+            $rlt = [
+                "type" => "picture_comment_response",
+                "success" => false,
+                "error_no" => 4,
+                "error_msg" => "token not valid.",
+            ];
+            return json_encode($rlt);
+        }
+
+        $newdata = array( '$set' => array('username' => "$username"));
+        $this->userCollection->update(array("tel" => $tel), $newdata);
+        $user = $this->userCollection->findOne(array("tel" => $tel));
+        $rlt = [
+            "type" => "picture_comment_response",
+            "success" => true,
+            "error_no" => 0,
+            "error_msg" => null,
+            "picture" => $user,
+        ];
+        return  json_encode($rlt);
+    }
+
 
     public function actionSmsValidationRequest()
     {
