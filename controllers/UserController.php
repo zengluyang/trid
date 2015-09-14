@@ -376,7 +376,7 @@ class UserController extends \app\controllers\RestController
 
         $newdata = array( '$set' => array('username' => "$username"));
         $this->mongoCollection->update(array("tel" => $tel), $newdata);
-        $user = $this->mongoCollection->findOne(["tel" => $tel]);
+        $user = $this->mongoCollection->findOne(["tel" => $tel],['username']);
         $rlt = [
             "type" => "set_username_response",
             "success" => true,
