@@ -352,7 +352,7 @@ class UserController extends \app\controllers\RestController
         $tel = $json_data['tel'];
         $username =  $json_data['username'];
 
-        $user = $this->userColleciton->findOne(['tel'=>$tel]);
+        $user = $this->mongoCollection->findOne(['tel' => $tel]);
 
         if($user==null) {
             $rlt = [
@@ -374,9 +374,9 @@ class UserController extends \app\controllers\RestController
             return json_encode($rlt);
         }
 
-        //$newdata = array( '$set' => array('username' => "$username"));
-        //$this->userCollection->update(array("tel" => $tel), $newdata);
-        $user = $this->userCollection->findOne(array("tel" => $tel));
+        $newdata = array( '$set' => array('username' => "$username"));
+        $this->mongoCollection->update(array("tel" => $tel), $newdata);
+        $user = $this->mongoCollection->findOne(["tel" => $tel]);
         $rlt = [
             "type" => "set_username_response",
             "success" => true,
