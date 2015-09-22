@@ -841,9 +841,20 @@ class ContactController extends \app\controllers\RestController
         }
 
         $pfriend = $this->find_friend($content["peer_tel"], $content["tel"]);
-        $newdata = ['$pull' => ["friend_list" => ["peer_tel" => $content["tel"]]]];
-        $this->mongoCollection->update(["tel" => $content["peer_tel"]], $newdata);
-        $this->delete_friend_notify($content["peer_tel"], $pfriend);
+        if(isset($pfriend)) {
+            if(!$this->delete_friend_notify($content["peer_tel"], $pfriend)) {
+                $rlt = [
+                    "type" => $rlt_type,
+                    "success" => false,
+                    "error_no" => 6,
+                    "error_msg" => "fail to send delete friend notification to peer user."
+                ];
+                return json_encode($rlt);
+            }
+                    
+            $newdata = ['$pull' => ["friend_list" => ["peer_tel" => $content["tel"]]]];
+            $this->mongoCollection->update(["tel" => $content["peer_tel"]], $newdata);         
+        }
 
         $newdata = ['$pull' => ["friend_list" => ["peer_tel" => $content["peer_tel"]]]];
         $this->mongoCollection->update(["tel" => $content["tel"]], $newdata);
@@ -1019,12 +1030,38 @@ class ContactController extends \app\controllers\RestController
     	return (time() + 3 * 24 * 3600);
     }
 
+    //this function need to be deleted, and all the call of this function
+    //need to be substituted to new_friend_notify function.
     private function add_friend_notify($tel, $friend, $word) {
     	return;
     }
 
     private function delete_friend_notify($tel, $friend) {
-    	return;
+        $user = $this->mongoCollection->findOne(["tel" => $tel]);
+        if($user == null || !isset($user["huanxin_id"])) {
+            return false;
+        }
+
+        $from = "admin";
+        $taget[] = $user["huanxin_id"];
+        $target_type = "users";
+        $msg = [
+            "type" => "cmd",
+            "action" => "delete_friend_notification",
+        ];
+        $ext = [
+            "friend" => $friend;
+        ];
+
+        $result = Yii::$app->easemobClient->yy_hxSend($from, $target, $msg, $target_type, $ext);
+        if(!isset($result) ||
+            empty($result) ||
+            ( isset($result['error']) && !empty($result['error']) )
+        ) {
+            return false;
+        }
+
+    	return true;
     }
 
     private function new_friend_notify($tel, $friend, $word) {
