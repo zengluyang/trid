@@ -1043,16 +1043,16 @@ class ContactController extends \app\controllers\RestController
         }
 
         $from = "admin";
-        $taget[] = $user["huanxin_id"];
+        $target[] = $user["huanxin_id"];
         $target_type = "users";
         $msg = [
             "type" => "cmd",
             "action" => "delete_friend_notification",
         ];
         $ext = [
-            "friend" => $friend;
+            "friend" => $friend
         ];
-
+	
         $result = Yii::$app->easemobClient->yy_hxSend($from, $target, $msg, $target_type, $ext);
         if(!isset($result) ||
             empty($result) ||
