@@ -182,6 +182,10 @@ class ChatRecordController extends \app\controllers\RestController
             return json_encode($rlt);
         }
 
+        if(isset($content['limit'])) {
+            $limit=(int)$content['limit'];
+        }
+
         $user = $this->userCollection->findOne(['tel'=>$content["tel"]]);
         if($user==null) {
             $rlt = [
@@ -220,7 +224,6 @@ class ChatRecordController extends \app\controllers\RestController
         $this->sync();
         
         foreach ($user["friend_list"] as &$f) {
-            # code...
             $self_huanxin_id = $user['huanxin_id'];
             $peer_huanxin_id = $f['huanxin_id'];
             $q = [
@@ -231,7 +234,11 @@ class ChatRecordController extends \app\controllers\RestController
                 ],
             ];
 
-            $chat_records = iterator_to_array($this->chatRecordCollection->find($q),false);
+            $cursor = $this->chatRecordCollection->find($q)->sort(['timestamp'=>1]);
+            if(isset($limit)) {
+                $cursor->limit($limit);
+            }
+            $chat_records = iterator_to_array($cursor,false);
             $f['chat_records'] = $chat_records;
             
         }
@@ -273,12 +280,8 @@ class ChatRecordController extends \app\controllers\RestController
         }
         $huanxin_rlt =Yii::$app->easemobClient->chatRecord($ql,$cursor,$limit);
         if(isset($huanxin_rlt['error'])) { 
-            $rlt = [
-                'success' => false,
-                'huanxin_rlt' => $huanxin_rlt, 
-                'error_no'=> -1,
-            ];
-            return json_encode($rlt);
+            var_dump($huanxin_rlt);
+            return null;
         }
         $entities = $huanxin_rlt['entities'];
         foreach ($entities as $e) {
