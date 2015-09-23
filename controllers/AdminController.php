@@ -99,4 +99,11 @@ class AdminController extends \app\controllers\RestController
 
     }
 
+	public function actionClearPfAnswer() {
+        $tel = isset($_GET['tel'])? $_GET['tel'] : "";
+        $m = new \MongoClient();
+        $userCollection = $m->selectCollection($this->mongoDbName,'user');
+		$newdata = ['$pullAll' => ["pf_answer"]];
+		$userCollection->update(["tel" => $tel], $newdata);
+	}
 }
