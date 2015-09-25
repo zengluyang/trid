@@ -352,6 +352,7 @@ class EasemobClient extends Component {
 		$url = $this->url . "chatmessages?" . $ql . "&limit=" . $limit . $cursor;
 		$access_token = $this->getToken ();
 		$header [] = 'Authorization: Bearer ' . $access_token;
+		//var_dump($header);
 		$result = $this->postCurl ( $url, '', $header, $type = "GET " );
 		return json_decode($result,true);
 	}
@@ -430,7 +431,7 @@ class EasemobClient extends Component {
 		}
 		$rlt_j = json_decode($result,true);
 		if(isset($rlt_j['error']) && $rlt_j['error']=='auth_invalid') {
-			$this->refreshToken();
+		//	$this->refreshToken();
 		}
 		//var_dump($result);
 		return $result;
