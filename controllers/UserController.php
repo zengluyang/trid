@@ -297,6 +297,7 @@ class UserController extends \app\controllers\RestController
 
             
         $rlt = [
+            "type" => $type,
             "success" => true,
             "error_no" => 0,
             "error_msg" => null,
