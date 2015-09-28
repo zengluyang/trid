@@ -100,11 +100,21 @@ class PictureController extends \app\controllers\RestController {
             return json_encode($rlt);
         }
 
-        if (!preg_match('/^(data:\s*image\/(\w+);base64,)/', $picture, $result)) {
+        if(!isset($user["username"])) {
             $rlt = [
                 "type" => "picture_upload_response",
                 "success" => false,
                 "error_no" => 5,
+                "error_msg" => "nick does not exist..",
+            ];
+            return json_encode($rlt);
+        }
+
+        if (!preg_match('/^(data:\s*image\/(\w+);base64,)/', $picture, $result)) {
+            $rlt = [
+                "type" => "picture_upload_response",
+                "success" => false,
+                "error_no" => 6,
                 "error_msg" => "picture not valid.",
             ];
             return json_encode($rlt);
@@ -117,7 +127,7 @@ class PictureController extends \app\controllers\RestController {
             $rlt = [
                 "type" => "picture_upload_response",
                 "success" => false,
-                "error_no" => 3,
+                "error_no" => 7,
                 "error_msg" => "upload type not allowed.",
             ];
             return json_encode($rlt);
@@ -132,7 +142,7 @@ class PictureController extends \app\controllers\RestController {
                 $rlt = [
                     "type" => "picture_upload_response",
                     "success" => false,
-                    "error_no" => 4,
+                    "error_no" => 8,
                     "error_msg" => "file save failed.",
                 ];
                 return json_encode($rlt);
@@ -144,17 +154,17 @@ class PictureController extends \app\controllers\RestController {
             $rlt = [
                 "type" => "picture_upload_response",
                 "success" => false,
-                "error_no" => 4,
+                "error_no" => 9,
                 "error_msg" => "file save failed.",
             ];
             return json_encode($rlt);
         }
         $fileUrl = '/'.$new_file;
-        if (!$this->saveTest($fileUrl, $words,$user["_id"])) {
+        if (!$this->saveTest($fileUrl, $words,$user["_id"],$user['username'])) {
             $rlt = [
                 "type" => "picture_upload_response",
                 "success" => false,
-                "error_no" => 5,
+                "error_no" => 10,
                 "error_msg" => "database error.",
             ];
             return json_encode($rlt);
@@ -313,7 +323,6 @@ class PictureController extends \app\controllers\RestController {
         $type = $json_data['type'];
         $tel = $json_data['tel'];
         $user = $this->userColleciton->findOne(['tel'=>$tel]);
-
         if($user==null) {
             $rlt = [
                 "type" => "picture_search_response",
@@ -684,13 +693,21 @@ class PictureController extends \app\controllers\RestController {
     /*
      * 数据库操作：插入数据
      * */
-    private function saveTest($pictureName, $words,$user_id)
+    private function saveTest($pictureName, $words,$user_id,$username)
     {
         $time = time();
         $like = 0;
         $like_by = array();
         $comments = array();
-        $newdata = array("picture" => "$pictureName", "word" => $words,"like" => $like,"like_by" => $like_by,"comments" => $comments,"createtime" => $time,"created_by"=>$user_id);
+        $newdata = array(
+            "picture" => "$pictureName",
+            "word" => $words,
+            "like" => $like,
+            "like_by" => $like_by,
+            "comments" => $comments,
+            "createtime" => $time,
+            "created_by"=>$user_id,
+            "nick"=> $username);
         $this->pictureCollection->insert($newdata);
         return true;
     }
