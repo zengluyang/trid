@@ -861,7 +861,8 @@ class ContactController extends \app\controllers\RestController
 
         $rlt = [
             "type" => $rlt_type,
-            "success" => true,
+			"success" => true,
+			"peer_tel" => $content["peer_tel"],
             "error_no" => 0,
             "error_msg" => "",
         ];
