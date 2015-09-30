@@ -234,9 +234,11 @@ class ChatRecordController extends \app\controllers\RestController
                 ],
             ];
 
-            $cursor = $this->chatRecordCollection->find($q)->sort(['timestamp'=>1]);
+            $cursor = $this->chatRecordCollection->find($q);
             if(isset($limit)) {
-                $cursor->limit($limit);
+                $cursor->limit($limit)->sort(['timestamp'=>-1);
+            } else {
+                $cursor->sort(['timestamp'=>1]);
             }
             $chat_records = iterator_to_array($cursor,false);
             $f['chat_records'] = $chat_records;
