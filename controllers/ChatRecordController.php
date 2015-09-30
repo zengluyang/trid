@@ -236,7 +236,7 @@ class ChatRecordController extends \app\controllers\RestController
 
             $cursor = $this->chatRecordCollection->find($q);
             if(isset($limit)) {
-                $cursor->limit($limit)->sort(['timestamp'=>-1);
+                $cursor->limit($limit)->sort(['timestamp'=>-1]);
             } else {
                 $cursor->sort(['timestamp'=>1]);
             }
